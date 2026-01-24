@@ -4,10 +4,10 @@
 
 ```mermaid
 classDiagram
-    Payment o-- "*" Label
+    Payment "*" o-- "*" Label
     Payment o-- "1" PaymentMethod
     PaymentMethod o-- "*" Bank
-    Payment "1" o-- "1" RecurringPayment
+    Payment "1" o-- "0..1" RecurringPayment
     class Payment{
       -id : int
       -name : string
