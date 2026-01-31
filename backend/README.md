@@ -4,17 +4,17 @@
 
 ```mermaid
 classDiagram
-    Payment "*" o-- "*" Label
-    Payment o-- "1" PaymentMethod
-    PaymentMethod o-- "*" Bank
-    Payment "1" o-- "0..1" RecurringPayment
-    class Payment{
+    Transaction "*" o-- "*" Label
+    Transaction o-- "1" TransactionMethod
+    TransactionMethod o-- "*" Bank
+    Transaction "1" o-- "0..1" RecurringTransaction
+    class Transaction{
       -id : int
       -name : string
       -?title : string
       -date : Date
       -amount : int
-      -payment_method_id : int
+      -transaction_method_id : int
       -?label_id : int
       -?description : string
       -is_recurring : bool
@@ -25,9 +25,9 @@ classDiagram
       -name : string
       -?couleur : Color
     }
-    class PaymentMethod{
+    class TransactionMethod{
       -id : int
-      -type : PaymentType
+      -type : TransactionType
       -?bank_id : int
     }
 
@@ -38,8 +38,8 @@ classDiagram
         -?description : string
     }
 
-    class RecurringPayment{
-        -payment_id : int
+    class RecurringTransaction{
+        -transaction_id : int
         -frequency : Frequency
         -day : int
         -start_date : Date
@@ -63,7 +63,7 @@ classDiagram
         LIVRET JEUNE
     }
 
-    class PaymentType{
+    class TransactionType{
         <<enumeration>>
         ESPECE
         CARTE
@@ -80,3 +80,40 @@ classDiagram
         YEARLY
     }
 ```
+
+## Routes REST API
+
+### GET
+
+#### Transaction
+
+##### Get /transactions
+
+##### Get /transactions/{trans_id}
+
+
+#### Banks
+
+##### Get /banks
+
+
+#### Labels
+
+##### Get /labels
+
+
+#### Transaction Methods
+
+##### Get /transaction_methods
+
+
+### POST
+
+### PUT
+
+### PATCH
+
+### DELETE
+
+
+

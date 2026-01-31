@@ -77,7 +77,7 @@ Résultat attendu :
 ##### Objectif : Avoir une API qui fonctionne rapidement
 
 A faire :
-- Créer unn projet FastAPI
+- Créer un projet FastAPI
 - Connecter SQLite
 - Créer les routes HTML
 - Tester via /Docs

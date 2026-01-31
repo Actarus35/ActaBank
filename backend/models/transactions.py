@@ -10,3 +10,15 @@ class Transaction(BaseModel):
     amount: float
     description: str | None
     is_recurring: bool
+
+
+class TransactionList(BaseModel):
+    id: int
+    name: str
+    date: datetime
+    amount: float
+
+
+class CreateTransaction(BaseModel):
+    name: str
+    amount: float
