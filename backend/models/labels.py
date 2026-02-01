@@ -1,7 +1,12 @@
-from pydantic import BaseModel
+from sqlalchemy.orm import Mapped, mapped_column
+from database import Base
 
 
-class Label(BaseModel):
-    id: int
-    name: str
-    color: str
+class Label(Base):
+    __tablename__ = "labels"
+    label_id: Mapped[int] = mapped_column(primary_key=True)
+    label_name: Mapped[str] = mapped_column(nullable=False)
+    label_color: Mapped[str] = mapped_column(nullable=False, default="white")
+
+    def __repr__(self) -> str:
+        return f"Label(id={self.label_id!r}, name={self.label_name!r}, color={self.label_color!r})"
