@@ -1,5 +1,5 @@
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
 
@@ -9,6 +9,8 @@ class Bank(Base):
     bank_name: Mapped[str] = mapped_column(String(30), nullable=False)
     bank_account_type: Mapped[str] = mapped_column(unique=True, nullable=False)
     bank_description: Mapped[str] = mapped_column(nullable=True)
+
+    method = relationship("TransactionMethod", back_populates="bank")
 
     def __repr__(self) -> str:
         return f"Bank(id={self.bank_id!r}, name={self.bank_name!r}, account_type={self.bank_account_type!r}, description={self.bank_description!r})"
