@@ -1,14 +1,19 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from models.transactions import Transaction
-from schemas.transactions import TransactionCreate
+from models.transaction_methods import TransactionMethod
+from schemas.transactions import TransactionCreate, TransactionUpdate
 
 
 def get_transactions(db: Session):
-    return db.query(Transaction).all()
+    return db.query(Transaction).options(
+        selectinload(Transaction.method).selectinload(TransactionMethod.bank),
+        selectinload(Transaction.label),
+        selectinload(Transaction.recurring_transaction),
+    ).all()
 
 
 def get_transaction(db: Session, transaction_id: int):
-    return db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    return db.query(Transaction).filter(Transaction.transac_id == transaction_id).first()
 
 
 def create_transaction(db: Session, transaction: TransactionCreate):
@@ -25,3 +30,18 @@ def delete_transaction(db: Session, transaction_id: int):
         db.delete(trans)
         db.commit()
     return trans
+
+
+def modify_transacation(db: Session, transaction_id: int, transaction_update: TransactionUpdate):
+    db_trans = get_transaction(db, transaction_id)
+    if not db_trans:
+        return None
+
+    update_data = transaction_update.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_trans, key, value)
+
+    db.commit()
+    db.refresh(db_trans)
+    return db_trans

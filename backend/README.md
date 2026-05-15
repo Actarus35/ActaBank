@@ -6,18 +6,17 @@
 classDiagram
     Transaction "*" o-- "*" Label
     Transaction o-- "1" TransactionMethod
-    TransactionMethod o-- "*" Bank
+    TransactionMethod "*" o-- "0..1" Bank
     Transaction "1" o-- "0..1" RecurringTransaction
     class Transaction{
       -id : int
       -name : string
-      -?title : string
       -date : Date
-      -amount : int
+      -amount : float
       -transaction_method_id : int
       -?label_id : int
+      -?recurring_transaction_id : int
       -?description : string
-      -is_recurring : bool
     }
 
     class Label{
@@ -41,7 +40,6 @@ classDiagram
     class RecurringTransaction{
         -transaction_id : int
         -frequency : Frequency
-        -day : int
         -start_date : Date
         -?end_date : Date
     }

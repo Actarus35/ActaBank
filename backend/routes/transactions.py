@@ -1,18 +1,20 @@
-from main import app, get_db
-
-from fastapi import Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from dependencies import get_db
 
-import schemas.transactions as schema
-import crud.transactions as crud
+from schemas import transactions as schema
+from crud import transactions as crud
 
 
-@app.get("/transactions", response_model=list[schema.TransactionRead])
+router = APIRouter(prefix="/transactions", tags=["transactions"])
+
+
+@router.get("/", response_model=list[schema.TransactionRead])
 def read_transactions(db: Session = Depends(get_db)):
     return crud.get_transactions(db)
 
 
-@app.get("/transactions/{transaction_id}", response_model=schema.TransactionRead)
+@router.get("/{transaction_id}", response_model=schema.TransactionRead)
 def read_transaction(transaction_id: int, db: Session = Depends(get_db)):
     trans = crud.get_transaction(db, transaction_id)
     if not trans:
@@ -20,11 +22,19 @@ def read_transaction(transaction_id: int, db: Session = Depends(get_db)):
     return trans
 
 
-@app.post("/transactions", response_model=schema.TransactionRead, status_code=201)
+@router.post("/", response_model=schema.TransactionRead, status_code=201)
 def create_transaction(transaction: schema.TransactionCreate, db: Session = Depends(get_db)):
     return crud.create_transaction(db, transaction)
 
 
-@app.delete("/transactions/{transaction_id}", status_code=204)
+@router.delete("/{transaction_id}", status_code=204)
 def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
     crud.delete_transaction(db, transaction_id)
+
+
+@router.patch("/{transaction_id}", response_model=schema.TransactionRead)
+def update_transaction(transaction_id, transaction_update: schema.TransactionUpdate, db: Session = Depends(get_db)):
+    trans = crud.modify_transacation(db, transaction_id, transaction_update)
+    if not trans:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return trans
