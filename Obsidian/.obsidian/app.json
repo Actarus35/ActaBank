@@ -1,0 +1,8 @@
+{
+  "promptDelete": false,
+  "vimMode": false,
+  "userIgnoreFilters": [
+    "Templates/"
+  ],
+  "newFileLocation": "folder"
+}

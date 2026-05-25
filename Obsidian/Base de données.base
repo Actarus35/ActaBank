@@ -1,0 +1,8 @@
+views:
+  - type: table
+    name: Tableau
+    order:
+      - file.name
+    sort:
+      - property: file.tags
+        direction: ASC
