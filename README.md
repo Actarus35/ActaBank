@@ -187,4 +187,4 @@ A faire :
 
 Ainsi, ce projet a pour but de développer mes compétences dans les différentes technologies citées précédemment.
 
-Dans le cadre de ce projet, je n'utiliserait aucun LLM afin d'être conscient de l'entièreté du code de cette application et d'en être le seul auteur.
+Dans le cadre de ce projet, je n'utiliserait aucun LLM écrivant du code à ma place afin d'être conscient de l'entièreté du code de cette application et d'en être le seul auteur. Je pourrais les utiliser à des fins pédagogiques comme pour Claude Code qui est explicitement paramétré pour ne pas pouvoir agir, seulement lire et me conseiller.
