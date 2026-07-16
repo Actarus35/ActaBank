@@ -5,7 +5,7 @@
 #### Commande pour lancer le serveur de développement :
 
 ```bash
-fastapi dev mainpy
+fastapi dev main.py
 ```
 On peut accéder à l'API REST interactive (Swagger) exposée sur [ce lien](http://127.0.0.1:8000/docs#/)
 

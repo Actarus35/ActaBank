@@ -29,12 +29,14 @@ def create_transaction(transaction: schema.TransactionCreate, db: Session = Depe
 
 @router.delete("/{transaction_id}", status_code=204)
 def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
-    crud.delete_transaction(db, transaction_id)
+    transaction = crud.delete_transaction(db, transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
 
 
 @router.patch("/{transaction_id}", response_model=schema.TransactionRead)
-def update_transaction(transaction_id, transaction_update: schema.TransactionUpdate, db: Session = Depends(get_db)):
-    trans = crud.modify_transacation(db, transaction_id, transaction_update)
+def update_transaction(transaction_id: int, transaction_update: schema.TransactionUpdate, db: Session = Depends(get_db)):
+    trans = crud.modify_transaction(db, transaction_id, transaction_update)
     if not trans:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return trans

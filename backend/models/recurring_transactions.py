@@ -16,4 +16,4 @@ class RecurringTransaction(Base):
     transaction = relationship("Transaction", back_populates="recurring_transaction")
 
     def __repr__(self) -> str:
-        return f"RecurringTransaction(id={self.rectransac_id!r}, frequency={self.rectransac_frequency!r}, start_date={self.rectransac_start_date!r}, end_date={self.rectransac_end_date!r}, transac_id={self.transaction!r})"
+        return f"RecurringTransaction(id={self.rectrans_id!r}, frequency={self.rectrans_frequency!r}, start_date={self.rectrans_start_date!r}, end_date={self.rectrans_end_date!r}, transac_id={self.transaction!r})"

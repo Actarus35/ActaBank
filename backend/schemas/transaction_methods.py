@@ -16,7 +16,7 @@ class TransactionMethodCreate(TransactionMethodBase):
 
 class TransactionMethodRead(TransactionMethodBase):
     transmet_id: int
-    bank: BankRead
+    bank: Optional[BankRead] = None
 
     class Config:
         from_attributes = True

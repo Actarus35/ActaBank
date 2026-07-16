@@ -1,8 +1,8 @@
-"""initial schema
+"""revision Claude
 
-Revision ID: fb81e917f26b
+Revision ID: 77a187166de9
 Revises: 
-Create Date: 2026-03-01 22:54:21.480065
+Create Date: 2026-07-16 19:03:11.066128
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'fb81e917f26b'
+revision: str = '77a187166de9'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -36,7 +36,7 @@ def upgrade() -> None:
     )
     op.create_table('recurring_transactions',
     sa.Column('rectrans_id', sa.Integer(), nullable=False),
-    sa.Column('rectrans_frequency', sa.Enum('DAYLY', 'WEEKLY', 'MONTHLY', 'YEARLY', name='frequency'), nullable=False),
+    sa.Column('rectrans_frequency', sa.Enum('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', name='frequency'), nullable=False),
     sa.Column('rectrans_start_date', sa.DateTime(), nullable=False),
     sa.Column('rectrans_end_date', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('rectrans_id')

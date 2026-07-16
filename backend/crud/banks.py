@@ -12,7 +12,7 @@ def get_bank(db: Session, bank_id: int):
 
 
 def create_bank(db: Session, bank: BankCreate):
-    db_bank = Bank(**bank.dict())
+    db_bank = Bank(**bank.model_dump())
     db.add(db_bank)
     db.commit()
     db.refresh(db_bank)

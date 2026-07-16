@@ -29,4 +29,6 @@ def create_transaction_method(transaction: schema.TransactionMethodCreate, db: S
 
 @router.delete("/{transmet_id}", status_code=204)
 def delete_transaction_method(transmet_id: int, db: Session = Depends(get_db)):
-    crud.delete_transaction_method(db, transmet_id)
+    transaction_method = crud.delete_transaction_method(db, transmet_id)
+    if not transaction_method:
+        raise HTTPException(status_code=404, detail="Transaction method not found")

@@ -29,11 +29,13 @@ def create_bank(bank: schema.BankCreate, db: Session = Depends(get_db)):
 
 @router.delete("/{bank_id}", status_code=204)
 def delete_bank(bank_id: int, db: Session = Depends(get_db)):
-    crud.delete_bank(db, bank_id)
+    bank = crud.delete_bank(db, bank_id)
+    if not bank:
+        raise HTTPException(status_code=404, detail="Bank not found")
 
 
 @router.patch("/{bank_id}", response_model=schema.BankRead)
-def update_bank(bank_id, bank_update: schema.BankUpdate, db: Session = Depends(get_db)):
+def update_bank(bank_id: int, bank_update: schema.BankUpdate, db: Session = Depends(get_db)):
     bank = crud.modify_bank(db, bank_id, bank_update)
     if not bank:
         raise HTTPException(status_code=404, detail="Bank not found")

@@ -17,7 +17,7 @@ def get_transaction(db: Session, transaction_id: int):
 
 
 def create_transaction(db: Session, transaction: TransactionCreate):
-    db_trans = Transaction(**transaction.dict())
+    db_trans = Transaction(**transaction.model_dump())
     db.add(db_trans)
     db.commit()
     db.refresh(db_trans)
@@ -32,7 +32,7 @@ def delete_transaction(db: Session, transaction_id: int):
     return trans
 
 
-def modify_transacation(db: Session, transaction_id: int, transaction_update: TransactionUpdate):
+def modify_transaction(db: Session, transaction_id: int, transaction_update: TransactionUpdate):
     db_trans = get_transaction(db, transaction_id)
     if not db_trans:
         return None
