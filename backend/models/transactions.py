@@ -14,8 +14,8 @@ class Transaction(Base):
     transac_description: Mapped[str] = mapped_column(nullable=True)
 
     transmet_id: Mapped[int] = mapped_column(ForeignKey("transaction_methods.transmet_id"), nullable=False)
-    label_id: Mapped[int] = mapped_column(ForeignKey("labels.label_id"), nullable=True)
-    rectrans_id: Mapped[int] = mapped_column(ForeignKey("recurring_transactions.rectrans_id"), nullable=True)
+    label_id: Mapped[int] = mapped_column(ForeignKey("labels.label_id", ondelete="SET NULL"), nullable=True)
+    rectrans_id: Mapped[int] = mapped_column(ForeignKey("recurring_transactions.rectrans_id", ondelete="SET NULL"), nullable=True)
 
     method = relationship("TransactionMethod", back_populates="transactions")
     label = relationship("Label", back_populates="transactions")

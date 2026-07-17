@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 from enums.account_type import AccountType
@@ -17,8 +17,7 @@ class BankCreate(BankBase):
 class BankRead(BankBase):
     bank_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BankUpdate(BankBase):

@@ -4,6 +4,9 @@ from dependencies import get_db
 
 from schemas import transactions as schema
 from crud import transactions as crud
+from crud import transaction_methods as methods_crud
+from crud import labels as labels_crud
+from crud import recurring_transactions as rec_crud
 
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -24,6 +27,12 @@ def read_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schema.TransactionRead, status_code=201)
 def create_transaction(transaction: schema.TransactionCreate, db: Session = Depends(get_db)):
+    if not methods_crud.get_transaction_method(db, transaction.transmet_id):
+        raise HTTPException(status_code=422, detail="Méthode de paiement introuvable")
+    if transaction.label_id is not None and not labels_crud.get_label(db, transaction.label_id):
+        raise HTTPException(status_code=422, detail="Label introuvable")
+    if transaction.rectrans_id is not None and not rec_crud.get_recurring_transaction(db, transaction.rectrans_id):
+        raise HTTPException(status_code=422, detail="Récurrence introuvable")
     return crud.create_transaction(db, transaction)
 
 

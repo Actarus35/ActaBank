@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models.transaction_methods import TransactionMethod
-from schemas.transaction_methods import TransactionMethodCreate
+from schemas.transaction_methods import TransactionMethodCreate, TransactionMethodUpdate
 
 
 def get_transaction_methods(db: Session):
@@ -12,7 +12,7 @@ def get_transaction_method(db: Session, transmet_id: int):
 
 
 def create_transaction_method(db: Session, transmet: TransactionMethodCreate):
-    db_trans = TransactionMethod(**transmet.dict())
+    db_trans = TransactionMethod(**transmet.model_dump())
     db.add(db_trans)
     db.commit()
     db.refresh(db_trans)
@@ -25,3 +25,18 @@ def delete_transaction_method(db: Session, transmet_id: int):
         db.delete(trans)
         db.commit()
     return trans
+
+
+def modify_transaction_method(db: Session, transmet_id: int, transmet_update: TransactionMethodUpdate):
+    db_transmet = get_transaction_method(db, transmet_id)
+    if not db_transmet:
+        return None
+    
+    update_data = transmet_update.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_transmet, key, value)
+
+    db.commit()
+    db.refresh(db_transmet)
+    return db_transmet

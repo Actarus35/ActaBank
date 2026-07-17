@@ -11,7 +11,7 @@ class Label(Base):
     label_name: Mapped[str] = mapped_column(nullable=False)
     label_color: Mapped[Color] = mapped_column(Enum(Color), nullable=False, default=Color.WHITE)
 
-    transactions = relationship("Transaction", back_populates="label")
+    transactions = relationship("Transaction", back_populates="label", passive_deletes=True)
 
     def __repr__(self) -> str:
         return f"Label(id={self.label_id!r}, name={self.label_name!r}, color={self.label_color!r})"

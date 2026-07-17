@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
@@ -29,8 +29,8 @@ class TransactionRead(TransactionBase):
     label: Optional[LabelRead] = None
     recurring_transaction: Optional[RecurringTransactionRead] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 
 class TransactionUpdate(TransactionBase):

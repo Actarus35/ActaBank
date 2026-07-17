@@ -1,8 +1,8 @@
-"""revision Claude
+"""initial schema
 
-Revision ID: 77a187166de9
+Revision ID: 4da06ed612fd
 Revises: 
-Create Date: 2026-07-16 19:03:11.066128
+Create Date: 2026-07-17 23:09:43.292027
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '77a187166de9'
+revision: str = '4da06ed612fd'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -57,8 +57,8 @@ def upgrade() -> None:
     sa.Column('transmet_id', sa.Integer(), nullable=False),
     sa.Column('label_id', sa.Integer(), nullable=True),
     sa.Column('rectrans_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['label_id'], ['labels.label_id'], ),
-    sa.ForeignKeyConstraint(['rectrans_id'], ['recurring_transactions.rectrans_id'], ),
+    sa.ForeignKeyConstraint(['label_id'], ['labels.label_id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['rectrans_id'], ['recurring_transactions.rectrans_id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['transmet_id'], ['transaction_methods.transmet_id'], ),
     sa.PrimaryKeyConstraint('transac_id')
     )
