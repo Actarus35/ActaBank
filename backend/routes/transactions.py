@@ -12,6 +12,15 @@ from crud import recurring_transactions as rec_crud
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
+def check_transaction_refs(db, transmet_id, label_id, rectrans_id):
+    if transmet_id is not None and not methods_crud.get_transaction_method(db, transmet_id):
+        raise HTTPException(status_code=422, detail="Méthode de paiement introuvable")
+    if label_id is not None and not labels_crud.get_label(db, label_id):
+        raise HTTPException(status_code=422, detail="Label introuvable")
+    if rectrans_id is not None and not rec_crud.get_recurring_transaction(db, rectrans_id):
+        raise HTTPException(status_code=422, detail="Récurrence introuvable")
+
+
 @router.get("/", response_model=list[schema.TransactionRead])
 def read_transactions(db: Session = Depends(get_db)):
     return crud.get_transactions(db)
@@ -27,12 +36,7 @@ def read_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schema.TransactionRead, status_code=201)
 def create_transaction(transaction: schema.TransactionCreate, db: Session = Depends(get_db)):
-    if not methods_crud.get_transaction_method(db, transaction.transmet_id):
-        raise HTTPException(status_code=422, detail="Méthode de paiement introuvable")
-    if transaction.label_id is not None and not labels_crud.get_label(db, transaction.label_id):
-        raise HTTPException(status_code=422, detail="Label introuvable")
-    if transaction.rectrans_id is not None and not rec_crud.get_recurring_transaction(db, transaction.rectrans_id):
-        raise HTTPException(status_code=422, detail="Récurrence introuvable")
+    check_transaction_refs(db, transaction.transmet_id, transaction.label_id, transaction.rectrans_id)
     return crud.create_transaction(db, transaction)
 
 
@@ -45,6 +49,7 @@ def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{transaction_id}", response_model=schema.TransactionRead)
 def update_transaction(transaction_id: int, transaction_update: schema.TransactionUpdate, db: Session = Depends(get_db)):
+    check_transaction_refs(db, transaction_update.transmet_id, transaction_update.label_id, transaction_update.rectrans_id)
     trans = crud.modify_transaction(db, transaction_id, transaction_update)
     if not trans:
         raise HTTPException(status_code=404, detail="Transaction not found")

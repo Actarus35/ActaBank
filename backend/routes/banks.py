@@ -29,9 +29,18 @@ def create_bank(bank: schema.BankCreate, db: Session = Depends(get_db)):
 
 @router.delete("/{bank_id}", status_code=204)
 def delete_bank(bank_id: int, db: Session = Depends(get_db)):
-    bank = crud.delete_bank(db, bank_id)
+    bank = crud.get_bank(db, bank_id)
     if not bank:
-        raise HTTPException(status_code=404, detail="Bank not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Bank not found",
+        )
+    if bank.methods:
+        raise HTTPException(
+            status_code=409,
+            detail="Cette banque est utilisée par des méthodes de paiement et ne peut pas être supprimée",
+        )
+    crud.delete_bank(db, bank_id)
 
 
 @router.patch("/{bank_id}", response_model=schema.BankRead)
