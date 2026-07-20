@@ -10,10 +10,10 @@ class TransactionMethod(Base):
     transmet_id: Mapped[int] = mapped_column(primary_key=True)
     transmet_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType), nullable=True)
 
-    bank_id: Mapped[int] = mapped_column(ForeignKey("banks.bank_id"), nullable=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.account_id"), nullable=True)
 
-    bank = relationship("Bank", back_populates="methods")
+    account = relationship("Account", back_populates="methods")
     transactions = relationship("Transaction", back_populates="method")
 
     def __repr__(self) -> str:
-        return f"TransactionMethod(id={self.transmet_id!r}, type={self.transmet_type!r}, bank_id={self.bank_id!r})"
+        return f"TransactionMethod(id={self.transmet_id!r}, type={self.transmet_type!r}, account_id={self.account_id!r})"

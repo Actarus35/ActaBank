@@ -2,12 +2,12 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 from enums.transaction_type import TransactionType
-from schemas.banks import BankRead
+from schemas.accounts import AccountRead
 
 
 class TransactionMethodBase(BaseModel):
     transmet_type: TransactionType
-    bank_id: Optional[int] = None
+    account_id: Optional[int] = None
 
 
 class TransactionMethodCreate(TransactionMethodBase):
@@ -16,7 +16,7 @@ class TransactionMethodCreate(TransactionMethodBase):
 
 class TransactionMethodRead(TransactionMethodBase):
     transmet_id: int
-    bank: Optional[BankRead] = None
+    account: Optional[AccountRead] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -35,10 +35,10 @@ def delete_bank(bank_id: int, db: Session = Depends(get_db)):
             status_code=404,
             detail="Bank not found",
         )
-    if bank.methods:
+    if bank.accounts:
         raise HTTPException(
             status_code=409,
-            detail="Cette banque est utilisée par des méthodes de paiement et ne peut pas être supprimée",
+            detail="Cette banque est utilisée par des comptes et ne peut pas être supprimée",
         )
     crud.delete_bank(db, bank_id)
 

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session, selectinload
+from models.accounts import Account
 from models.transactions import Transaction
 from models.transaction_methods import TransactionMethod
 from schemas.transactions import TransactionCreate, TransactionUpdate
@@ -6,7 +7,7 @@ from schemas.transactions import TransactionCreate, TransactionUpdate
 
 def get_transactions(db: Session):
     return db.query(Transaction).options(
-        selectinload(Transaction.method).selectinload(TransactionMethod.bank),
+        selectinload(Transaction.method).selectinload(TransactionMethod.account).selectinload(Account.bank),
         selectinload(Transaction.label),
         selectinload(Transaction.recurring_transaction),
     ).all()

@@ -4,12 +4,12 @@ from dependencies import get_db
 
 from schemas import transaction_methods as schema
 from crud import transaction_methods as crud
-from crud import banks as banks_crud
+from crud import accounts as accounts_crud
 
 
-def check_method_refs(db, bank_id):
-    if bank_id is not None and not banks_crud.get_bank(db, bank_id):
-        raise HTTPException(status_code=422, detail="Banque introuvable")
+def check_method_refs(db, account_id):
+    if account_id is not None and not accounts_crud.get_account(db, account_id):
+        raise HTTPException(status_code=422, detail="Compte introuvable")
 
 
 router = APIRouter(prefix="/transaction_methods", tags=["transaction_methods"])
@@ -30,7 +30,7 @@ def read_transaction_method(transmet_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schema.TransactionMethodRead, status_code=201)
 def create_transaction_method(transaction: schema.TransactionMethodCreate, db: Session = Depends(get_db)):
-    check_method_refs(db, transaction.bank_id)
+    check_method_refs(db, transaction.account_id)
     return crud.create_transaction_method(db, transaction)
 
 
@@ -46,7 +46,7 @@ def delete_transaction_method(transmet_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{transmet_id}", response_model=schema.TransactionMethodRead)
 def update_transaction_method(transmet_id: int, transaction_update: schema.TransactionMethodUpdate, db: Session = Depends(get_db)):
-    check_method_refs(db, transaction_update.bank_id)
+    check_method_refs(db, transaction_update.account_id)
     transaction_method = crud.modify_transaction_method(db, transmet_id, transaction_update)
     if not transaction_method:
         raise HTTPException(status_code=404, detail="Transaction method not found")
