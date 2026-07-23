@@ -11,6 +11,7 @@ class TransactionMethod(Base):
     transmet_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType), nullable=True)
 
     account_id: Mapped[int] = mapped_column(ForeignKey("accounts.account_id"), nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)
 
     account = relationship("Account", back_populates="methods")
     transactions = relationship("Transaction", back_populates="method")

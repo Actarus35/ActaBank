@@ -1,4 +1,4 @@
-from sqlalchemy import String, Enum
+from sqlalchemy import ForeignKey, String, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -11,6 +11,8 @@ class Bank(Base):
     bank_name: Mapped[str] = mapped_column(String(30), nullable=False)
     bank_color: Mapped[Color] = mapped_column(Enum(Color), default=Color.WHITE, nullable=False)
     bank_description: Mapped[str] = mapped_column(nullable=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)
 
     accounts = relationship("Account", back_populates="bank")
 

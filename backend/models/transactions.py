@@ -13,6 +13,7 @@ class Transaction(Base):
     transac_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     transac_description: Mapped[str] = mapped_column(nullable=True)
 
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)
     transmet_id: Mapped[int] = mapped_column(ForeignKey("transaction_methods.transmet_id"), nullable=False)
     label_id: Mapped[int] = mapped_column(ForeignKey("labels.label_id", ondelete="SET NULL"), nullable=True)
     rectrans_id: Mapped[int] = mapped_column(ForeignKey("recurring_transactions.rectrans_id", ondelete="SET NULL"), nullable=True)
