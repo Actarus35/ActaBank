@@ -4,6 +4,9 @@
 > dans `backend/alembic/versions/`. Ce document n'en est qu'un résumé lisible — en cas de
 > divergence, **le code fait foi**.
 
+Base de données : **PostgreSQL** (lancé via Docker Compose ; voir le README du backend).
+Les tests, eux, tournent sur une base SQLite en mémoire.
+
 ## Vue d'ensemble
 
 Chaque donnée appartient à un utilisateur (`user_id`). Une transaction est l'entité centrale ;
@@ -11,11 +14,11 @@ elle est rattachée à un moyen de paiement, et optionnellement à une étiquett
 
 ```
 users
-├── banks
-│    └── accounts
-│         └── transaction_methods ──┐
-├── labels ────────────────────────┤
-└── recurring_transactions ────────┴── transactions
+ ├── banks
+ │    └── accounts
+ │         └── transaction_methods ──┐
+ ├── labels ────────────────────────┤
+ └── recurring_transactions ────────┴── transactions
 ```
 
 Toutes les ressources (hors `users`) portent une colonne `user_id` (FK → `users`, NOT NULL)
@@ -68,7 +71,7 @@ solde réel se calcule (solde initial + somme des transactions). Une seule sourc
 | `account_id` | INTEGER | FK → `accounts`, nullable |
 | `user_id` | INTEGER | FK → `users`, NOT NULL |
 
-`account_id` est nullable pour permettre les paiements en espèces, qui ne dépendent d'aucun compte.
+`account_id` est nullable pour les paiements qui ne dépendent d'aucun compte (espèces).
 
 ### `transactions` — l'entité centrale
 
@@ -108,19 +111,23 @@ sur des valeurs monétaires.
 
 ## Énumérations
 
-Définies dans `backend/enums/`.
+Définies dans `backend/enums/`. Les valeurs ci-dessous sont celles exposées par l'API.
 
-| Enum | Valeurs |
+| Enum | Valeurs (API) |
 |---|---|
 | `UserRole` | `USER`, `ADMIN` |
-| `AccountType` | `LIVRET_A`, `COMPTE_COURANT`, `LIVRET_JEUNE` |
+| `AccountType` | `LIVRET_A`, `COMPTE_COURANT`, `LIVRET_JEUNE`, `PORTEFEUILLE` |
 | `TransactionType` | `ESPECE`, `CARTE`, `VIREMENT`, `CHEQUE` |
 | `Color` | `BLACK`, `BLUE`, `BROWN`, `GRAY`, `GREEN`, `ORANGE`, `PINK`, `PURPLE`, `RED`, `WHITE`, `YELLOW` |
 | `Frequency` | `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY` |
 
-> À noter : depuis SQLAlchemy 2.0, un `Enum` ne crée **pas** de contrainte `CHECK` en base par
-> défaut. Les colonnes sont de simples `VARCHAR` : c'est **Pydantic** qui refuse les valeurs
-> invalides à l'entrée de l'API.
+> **Sous PostgreSQL, ces enums sont de vrais types natifs** (`accounttype`, `color`, etc.),
+> créés et supprimés par les migrations Alembic. Conséquence : **ajouter une valeur à un enum
+> nécessitera une migration** (`ALTER TYPE`), là où c'était gratuit avec SQLite.
+>
+> Le type natif stocke le **nom du membre** Python, tandis que l'API expose sa **valeur**.
+> Pour la plupart des membres nom = valeur, sauf `AccountType.WALLET` dont la valeur est
+> `PORTEFEUILLE` : la base contient donc `WALLET` et l'API renvoie `PORTEFEUILLE`.
 
 ## Propriété et sécurité (multi-utilisateurs)
 
@@ -130,14 +137,14 @@ de bout en bout :
 - **Aucune route ressource n'est accessible sans un JWT valide** (dépendance `get_current_user`).
 - Le CRUD **filtre systématiquement par propriétaire**. Accéder à la ressource d'un autre
   utilisateur renvoie **404** (et non 403 : « introuvable » ne révèle pas l'existence de la donnée).
-- Créer ou modifier une ressource en **référençant** la donnée d'un autre utilisateur
-  (ex. rattacher sa transaction au label d'autrui) est refusé avec un **422** au message neutre.
+- Créer ou modifier une ressource en **référençant** la donnée d'un autre utilisateur est
+  refusé avec un **422** au message neutre.
 - Le `user_id` n'apparaît dans **aucun** schéma Pydantic : il provient uniquement du token.
 
 ## Intégrité référentielle
 
-Les clés étrangères SQLite sont activées explicitement par un *event listener* dans
-`backend/database.py` (`PRAGMA foreign_keys=ON`) — sans cela, SQLite les ignorerait.
+PostgreSQL applique les clés étrangères nativement. (Le moteur SQLite utilisé pour les tests,
+lui, a besoin d'un `PRAGMA foreign_keys=ON` activé dans `database.py` ; sans quoi il les ignorerait.)
 
 **À la suppression d'un parent :**
 
