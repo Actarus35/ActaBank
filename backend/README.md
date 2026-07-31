@@ -89,7 +89,6 @@ la base de développement.
 
 ```mermaid
 classDiagram
-    note "Chaque ressource porte un user_id (propriétaire).\nLiens user_id omis ici pour la lisibilité."
     Bank "1" o-- "*" Account : héberge
     Account "0..1" o-- "*" TransactionMethod : porte
     TransactionMethod "1" o-- "*" Transaction : règle
