@@ -7,6 +7,7 @@ from crud import users as crud
 from schemas import users as schema
 from dependencies import get_db, get_current_user
 from security import verify_password, create_access_token
+from services.recurring import generate_due_transactions
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -34,6 +35,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Identifiant ou mot de passe incorrect",
             headers={"WWW-Authenticate": "Bearer"},
             )
+    generate_due_transactions(db, user.user_id)
     return schema.Token(access_token=create_access_token(user.user_id))
 
 
