@@ -121,22 +121,22 @@ final statsRepositoryProvider = Provider<StatsRepository>((ref) {
 
 final selectedPeriodProvider = StateProvider<String>((ref) => 'month');
 
-final summaryProvider = FutureProvider<StatsSummary>((ref) {
+final summaryProvider = FutureProvider.autoDispose<StatsSummary>((ref) {
   final period = ref.watch(selectedPeriodProvider);
   return ref.watch(statsRepositoryProvider).getSummary(period);
 });
 
-final byLabelProvider = FutureProvider<List<LabelStat>>((ref) {
+final byLabelProvider = FutureProvider.autoDispose<List<LabelStat>>((ref) {
     final period = ref.watch(selectedPeriodProvider);
     return ref.watch(statsRepositoryProvider).getByLabel(period);
 });
 
-final byBeneficiaryProvider = FutureProvider<List<BeneficiaryStat>>((ref) {
+final byBeneficiaryProvider = FutureProvider.autoDispose<List<BeneficiaryStat>>((ref) {
     final period = ref.watch(selectedPeriodProvider);
     return ref.watch(statsRepositoryProvider).getByBeneficiary(period);
 });
 
-final balanceOverTimeProvider = FutureProvider<BalanceOverTime>((ref) {
+final balanceOverTimeProvider = FutureProvider.autoDispose<BalanceOverTime>((ref) {
   final period = ref.watch(selectedPeriodProvider);
   return ref.watch(statsRepositoryProvider).getBalanceOverTime(period);
 });
