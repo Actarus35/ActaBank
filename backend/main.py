@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from models import transactions, transaction_methods, labels, banks, recurring_transactions, accounts, users
 
+from config import settings
 from routes.auth import router as auth_router
 from routes.stats import router as stats_router
 from routes.banks import router as banks_router
@@ -13,6 +15,13 @@ from routes.recurring_transactions import router as recurring_transactions_route
 
 
 app = FastAPI(title="ActaBank API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router)
 app.include_router(stats_router)

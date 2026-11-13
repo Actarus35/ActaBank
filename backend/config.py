@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     database_url: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    cors_origins: str = "http://localhost:8081"
 
     model_config = SettingsConfigDict(
         env_file=".env",
