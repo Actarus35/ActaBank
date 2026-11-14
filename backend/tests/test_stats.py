@@ -9,15 +9,15 @@ def _setup(client, headers, initial="1000.00"):
     return m["transmet_id"]
 
 
-def _tx(client, headers, tid, name, amount, date, label_id=None):
+def _tx(client, headers, tid, name, amount, date, category_id=None):
     body = {"transac_name": name, "transac_amount": amount, "transac_date": date.isoformat(), "transmet_id": tid}
-    if label_id is not None:
-        body["label_id"] = label_id
+    if category_id is not None:
+        body["category_id"] = category_id
     return client.post("/transactions/", json=body, headers=headers)
 
 
 def test_stats_protegees(client):
-    for url in ["/stats/summary", "/stats/by-label", "/stats/balance-over-time", "/stats/by-name"]:
+    for url in ["/stats/summary", "/stats/by-category", "/stats/balance-over-time", "/stats/by-name"]:
         assert client.get(url).status_code == 401
 
 
@@ -40,17 +40,17 @@ def test_summary_periode_invalide(client, alice):
     assert client.get("/stats/summary?period=foo", headers=alice).status_code == 422
 
 
-def test_by_label(client, alice):
+def test_by_category(client, alice):
     tid = _setup(client, alice)
     now = datetime.now()
-    courses = client.post("/labels/", json={"label_name": "Courses", "label_color": "GREEN"}, headers=alice).json()
-    _tx(client, alice, tid, "A", "-120.00", now.replace(day=5), courses["label_id"])
-    _tx(client, alice, tid, "B", "-80.00", now.replace(day=5), courses["label_id"])
-    _tx(client, alice, tid, "SansLabel", "-25.00", now.replace(day=5))
-    _tx(client, alice, tid, "Salaire", "2000.00", now.replace(day=5), courses["label_id"])
-    data = {d["label_name"]: d for d in client.get("/stats/by-label?period=month", headers=alice).json()}
+    courses = client.post("/categories/", json={"category_name": "Courses", "category_color": "GREEN"}, headers=alice).json()
+    _tx(client, alice, tid, "A", "-120.00", now.replace(day=5), courses["category_id"])
+    _tx(client, alice, tid, "B", "-80.00", now.replace(day=5), courses["category_id"])
+    _tx(client, alice, tid, "SansCategorie", "-25.00", now.replace(day=5))
+    _tx(client, alice, tid, "Salaire", "2000.00", now.replace(day=5), courses["category_id"])
+    data = {d["category_name"]: d for d in client.get("/stats/by-category?period=month", headers=alice).json()}
     assert float(data["Courses"]["total"]) == 200
-    assert data["Courses"]["label_color"] == "GREEN"
+    assert data["Courses"]["category_color"] == "GREEN"
     assert float(data[None]["total"]) == 25       # bucket non catégorisé
     assert all(float(d["total"]) > 0 for d in data.values())   # revenu exclu
 
@@ -83,4 +83,4 @@ def test_stats_isolation(client, alice, bob):
     _tx(client, alice, tid, "X", "-100.00", datetime.now().replace(day=5))
     s = client.get("/stats/summary?period=all", headers=bob).json()
     assert s["nb_transactions"] == 0 and float(s["solde"]) == 0
-    assert client.get("/stats/by-label?period=all", headers=bob).json() == []
+    assert client.get("/stats/by-category?period=all", headers=bob).json() == []

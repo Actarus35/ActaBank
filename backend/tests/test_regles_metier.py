@@ -20,8 +20,26 @@ def test_methode_espece_sans_compte(client, alice):
     assert reponse.status_code == 201
 
 
-def test_suppression_label_detague_la_transaction(client, alice, univers_alice):
-    label_id = univers_alice["label"]["label_id"]
+def test_suppression_categorie_la_retire_de_la_transaction(client, alice, univers_alice):
+    category_id = univers_alice["category"]["category_id"]
     transac_id = univers_alice["transaction"]["transac_id"]
-    assert client.delete(f"/labels/{label_id}", headers=alice).status_code == 204
-    assert client.get(f"/transactions/{transac_id}", headers=alice).json()["label"] is None
+    assert client.delete(f"/categories/{category_id}", headers=alice).status_code == 204
+    assert client.get(f"/transactions/{transac_id}", headers=alice).json()["category"] is None
+
+
+def test_suppression_tag_le_retire_de_la_transaction(client, alice, univers_alice):
+    tag_id = univers_alice["tag"]["tag_id"]
+    transac_id = univers_alice["transaction"]["transac_id"]
+    assert client.delete(f"/tags/{tag_id}", headers=alice).status_code == 204
+    reponse = client.get(f"/transactions/{transac_id}", headers=alice)
+    assert reponse.status_code == 200
+    assert reponse.json()["tags"] == []
+
+
+def test_modification_des_tags(client, alice, univers_alice):
+    transac_id = univers_alice["transaction"]["transac_id"]
+    url = f"/transactions/{transac_id}"
+    sans_toucher = client.patch(url, json={"transac_name": "Leclerc"}, headers=alice).json()
+    assert len(sans_toucher["tags"]) == 1
+    vide = client.patch(url, json={"tag_ids": []}, headers=alice).json()
+    assert vide["tags"] == []

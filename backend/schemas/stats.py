@@ -13,10 +13,10 @@ class StatsSummary(BaseModel):
     nb_transactions: int
 
 
-class LabelStat(BaseModel):
-    label_id: Optional[int]
-    label_name: Optional[str]
-    label_color: Optional[Color]
+class CategoryStat(BaseModel):
+    category_id: Optional[int]
+    category_name: Optional[str]
+    category_color: Optional[Color]
     total: Decimal
 
 

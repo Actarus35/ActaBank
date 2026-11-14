@@ -4,6 +4,8 @@ from datetime import datetime
 from decimal import Decimal
 from database import Base
 
+from models.tags import transaction_tags
+
 
 class Transaction(Base):
     __tablename__ = "transactions"
@@ -15,12 +17,13 @@ class Transaction(Base):
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)
     transmet_id: Mapped[int] = mapped_column(ForeignKey("transaction_methods.transmet_id"), nullable=False)
-    label_id: Mapped[int] = mapped_column(ForeignKey("labels.label_id", ondelete="SET NULL"), nullable=True)
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.category_id", ondelete="SET NULL"), nullable=True)
     rectrans_id: Mapped[int] = mapped_column(ForeignKey("recurring_transactions.rectrans_id", ondelete="SET NULL"), nullable=True)
 
     method = relationship("TransactionMethod", back_populates="transactions")
-    label = relationship("Label", back_populates="transactions")
+    category = relationship("Category", back_populates="transactions")
     recurring_transaction = relationship("RecurringTransaction", back_populates="transaction")
+    tags = relationship("Tag", secondary=transaction_tags, back_populates="transactions", passive_deletes=True)
 
     def __repr__(self) -> str:
-        return f"Transaction(id={self.transac_id!r}, name={self.transac_name!r}, date={self.transac_date!r}, amount={self.transac_amount!r}, description={self.transac_description!r}, transmet_id={self.transmet_id!r}, label_id={self.label_id!r}, rectrans_id={self.rectrans_id!r})"
+        return f"Transaction(id={self.transac_id!r}, name={self.transac_name!r}, date={self.transac_date!r}, amount={self.transac_amount!r}, description={self.transac_description!r}, transmet_id={self.transmet_id!r}, category_id={self.category_id!r}, rectrans_id={self.rectrans_id!r})"

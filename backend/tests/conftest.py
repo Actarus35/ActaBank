@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from database import Base
 from dependencies import get_db
-from models import users, banks, accounts, transaction_methods, transactions, labels, recurring_transactions
+from models import users, banks, accounts, transaction_methods, transactions, categories, recurring_transactions, tags
 
 @pytest.fixture
 def db_session():
@@ -75,21 +75,27 @@ def univers_alice(client, alice):
         "transmet_type": "CARTE",
         "account_id": account["account_id"],
     }, headers=alice).json()
-    label = client.post("/labels/", json={
-        "label_name": "Courses",
-        "label_color": "GREEN"
+    category = client.post("/categories/", json={
+        "category_name": "Courses",
+        "category_color": "GREEN"
+    }, headers=alice).json()
+    tag = client.post("/tags/", json={
+        "tag_name": "Roumanie",
+        "tag_color": "BLUE"
     }, headers=alice).json()
     transaction = client.post("/transactions/", json={
         "transac_name": "Carrefour",
         "transac_date": "2026-01-05T00:00:00",
         "transac_amount": "42.50",
         "transmet_id": method["transmet_id"],
-        "label_id": label["label_id"],
+        "category_id": category["category_id"],
+        "tag_ids": [tag["tag_id"]],
     }, headers=alice).json()
     return {
         "bank": bank,
         "account": account,
         "method": method,
-        "label": label,
+        "category": category,
+        "tag": tag,
         "transaction": transaction
     }

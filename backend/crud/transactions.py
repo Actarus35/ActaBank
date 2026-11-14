@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, selectinload
 from models.accounts import Account
+from crud.tags import get_tags_by_ids
 from models.transactions import Transaction
 from models.transaction_methods import TransactionMethod
 from schemas.transactions import TransactionCreate, TransactionUpdate
@@ -8,8 +9,9 @@ from schemas.transactions import TransactionCreate, TransactionUpdate
 def get_transactions(db: Session, user_id: int):
     return db.query(Transaction).filter(Transaction.user_id == user_id).options(
         selectinload(Transaction.method).selectinload(TransactionMethod.account).selectinload(Account.bank),
-        selectinload(Transaction.label),
+        selectinload(Transaction.category),
         selectinload(Transaction.recurring_transaction),
+        selectinload(Transaction.tags),
     ).all()
 
 
@@ -18,7 +20,10 @@ def get_transaction(db: Session, transaction_id: int, user_id: int):
 
 
 def create_transaction(db: Session, transaction: TransactionCreate, user_id: int):
-    db_trans = Transaction(**transaction.model_dump(), user_id=user_id)
+    data = transaction.model_dump()
+    tag_ids = data.pop("tag_ids")
+    db_trans = Transaction(**data, user_id=user_id)
+    db_trans.tags = get_tags_by_ids(db, tag_ids, user_id)
     db.add(db_trans)
     db.commit()
     db.refresh(db_trans)
@@ -39,6 +44,10 @@ def modify_transaction(db: Session, transaction_id: int, user_id: int, transacti
         return None
 
     update_data = transaction_update.model_dump(exclude_unset=True)
+
+    tag_ids = update_data.pop("tag_ids", None)
+    if tag_ids is not None:
+        db_trans.tags = get_tags_by_ids(db, tag_ids, user_id)
 
     for key, value in update_data.items():
         setattr(db_trans, key, value)

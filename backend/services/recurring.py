@@ -38,8 +38,9 @@ def generate_due_transactions(db: Session, user_id: int, now: datetime | None = 
                 transac_date=occurrence,
                 transac_amount=rule.rectrans_amount,
                 transmet_id=rule.rectrans_transmet_id,
-                label_id=rule.rectrans_label_id,
+                category_id=rule.rectrans_category_id,
                 rectrans_id=rule.rectrans_id,
+                tags=list(rule.tags),
                 user_id=rule.user_id,    
             ))
             rule.rectrans_last_generated = occurrence

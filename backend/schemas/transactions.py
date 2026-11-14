@@ -4,8 +4,9 @@ from typing import Optional
 from decimal import Decimal
 
 from schemas.transaction_methods import TransactionMethodRead
-from schemas.labels import LabelRead
+from schemas.categories import CategoryRead
 from schemas.recurring_transactions import RecurringTransactionRead
+from schemas.tags import TagRead
 
 
 class TransactionBase(BaseModel):
@@ -14,11 +15,12 @@ class TransactionBase(BaseModel):
     transac_amount: Decimal
     transac_description: Optional[str] = None
     transmet_id: int
-    label_id: Optional[int] = None
+    category_id: Optional[int] = None
     rectrans_id: Optional[int] = None
 
 
 class TransactionCreate(TransactionBase):
+    tag_ids: list[int] = []
     pass
 
 
@@ -26,8 +28,9 @@ class TransactionRead(TransactionBase):
     transac_id: int
 
     method: TransactionMethodRead
-    label: Optional[LabelRead] = None
+    category: Optional[CategoryRead] = None
     recurring_transaction: Optional[RecurringTransactionRead] = None
+    tags: list[TagRead] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,5 +42,6 @@ class TransactionUpdate(TransactionBase):
     transac_amount: Optional[Decimal] = None
     transac_description: Optional[str] = None
     transmet_id: Optional[int] = None
-    label_id: Optional[int] = None
+    category_id: Optional[int] = None
     rectrans_id: Optional[int] = None
+    tag_ids: Optional[list[int]] = None

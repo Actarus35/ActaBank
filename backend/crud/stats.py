@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from models.transactions import Transaction
 from models.accounts import Account
-from models.labels import Label
+from models.categories import Category
 from enums.stats_period import StatsPeriod
 
 
@@ -50,7 +50,7 @@ def get_summary(db: Session, user_id: int, period: StatsPeriod, now: datetime | 
     }
 
 
-def get_by_label(db: Session, user_id: int, period: StatsPeriod, now: datetime | None = None):
+def get_by_category(db: Session, user_id: int, period: StatsPeriod, now: datetime | None = None):
     now = now or datetime.now()
     start = period_start(period, now)
 
@@ -60,19 +60,19 @@ def get_by_label(db: Session, user_id: int, period: StatsPeriod, now: datetime |
 
     rows = (
         db.query(
-            Label.label_id,
-            Label.label_name,
-            Label.label_color,
+            Category.category_id,
+            Category.category_name,
+            Category.category_color,
             func.sum(-Transaction.transac_amount).label("total"),
         )
         .select_from(Transaction)
-        .outerjoin(Label, Transaction.label_id == Label.label_id)
+        .outerjoin(Category, Transaction.category_id == Category.category_id)
         .filter(*conds)
-        .group_by(Label.label_id, Label.label_name, Label.label_color)
+        .group_by(Category.category_id, Category.category_name, Category.category_color)
         .all()
     )
     return [
-        {"label_id": r.label_id, "label_name": r.label_name, "label_color": r.label_color, "total": r.total}
+        {"category_id": r.category_id, "category_name": r.category_name, "category_color": r.category_color, "total": r.total}
         for r in rows
     ]
 
