@@ -22,7 +22,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   bool _isExpense = true;
   DateTime _date = DateTime.now();
   int? _methodId;
-  int? _labelId;
+  int? _categoryId;
   bool _saving = false;
   String? _error;
 
@@ -58,7 +58,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           amount: _isExpense ? -value : value,
           description: description.isEmpty ? null : description,
           methodId: _methodId!,
-          labelId: _labelId,
+          categoryId: _categoryId,
         );
       ref.invalidate(transactionsProvider);
       if (mounted) Navigator.of(context).pop();
@@ -75,7 +75,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   @override
   Widget build(BuildContext context) {
     final methods = ref.watch(transactionMethodsProvider);
-    final labels = ref.watch(labelsProvider);
+    final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nouvelle transaction')),
@@ -139,19 +139,19 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              labels.when(
+              categories.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => const Text('Labels indisponibles'),
+                error: (e, _) => const Text('Catégories indisponibles'),
                 data: (list) => DropdownButtonFormField<int?>(
-                  initialValue: _labelId,
-                  decoration: const InputDecoration(labelText: 'Label'),
+                  initialValue: _categoryId,
+                  decoration: const InputDecoration(labelText: 'Catégorie'),
                   items: [
                     const DropdownMenuItem(
-                        value: null, child: Text('Sans label')),
+                        value: null, child: Text('Sans catégorie')),
                     for (final l in list)
                       DropdownMenuItem(value: l.id, child: Text(l.name)),
                   ],
-                  onChanged: (v) => setState(() => _labelId = v),
+                  onChanged: (v) => setState(() => _categoryId = v),
                 ),
               ),
               const SizedBox(height: 12),

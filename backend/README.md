@@ -145,7 +145,7 @@ classDiagram
       +category_id?: int
       +rectrans_id?: int
     }
-        class Category {
+    class Category {
       +category_id: int
       +category_name: str
       +category_color: Color

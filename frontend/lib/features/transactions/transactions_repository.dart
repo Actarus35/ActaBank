@@ -9,8 +9,8 @@ class Transaction {
     final DateTime date;
     final double amount;
     final String? description;
-    final String? labelName;
-    final String? labelColor;
+    final String? categoryName;
+    final String? categoryColor;
     final String methodType;
 
     Transaction({
@@ -19,21 +19,21 @@ class Transaction {
         required this.date,
         required this.amount,
         this.description,
-        this.labelName,
-        this.labelColor,
+        this.categoryName,
+        this.categoryColor,
         required this.methodType,
     });
 
     factory Transaction.fromJson(Map<String, dynamic> json) {
-        final label = json['label'] as Map<String, dynamic>?;
+        final category = json['category'] as Map<String, dynamic>?;
         return Transaction(
             id: json['transac_id'] as int,
             name: json['transac_name'] as String,
             date: DateTime.parse(json['transac_date'] as String),
             amount: double.parse(json['transac_amount'].toString()),
             description: json['transac_description'] as String?,
-            labelName: label?['label_name'] as String?,
-            labelColor: label?['label_color'] as String?,
+            categoryName: category?['category_name'] as String?,
+            categoryColor: category?['category_color'] as String?,
             methodType: json['method']['transmet_type'] as String,
         );
     }
@@ -58,7 +58,7 @@ class TransactionsRepository {
       required double amount,
       String? description,
       required int methodId,
-      int? labelId,
+      int? categoryId,
     }) async {
       await _dio.post('/transactions/', data: {
         'transac_name': name,
@@ -66,7 +66,7 @@ class TransactionsRepository {
         'transac_amount': amount.toStringAsFixed(2),
         'transac_description': description,
         'transmet_id': methodId,
-        'label_id': labelId,
+        'category_id': categoryId,
       });
     }
 }

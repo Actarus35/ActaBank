@@ -38,9 +38,9 @@ class StatsRepository {
     return StatsSummary.fromJson(response.data);
   }
 
-  Future<List<LabelStat>> getByLabel(String period) async {
-    final response = await _dio.get('/stats/by-label', queryParameters: {'period': period});
-    return (response.data as List).map((e) => LabelStat.fromJson(e)).toList();
+  Future<List<CategoryStat>> getByCategory(String period) async {
+    final response = await _dio.get('/stats/by-category', queryParameters: {'period': period});
+    return (response.data as List).map((e) => CategoryStat.fromJson(e)).toList();
   }
 
   Future<BalanceOverTime> getBalanceOverTime(String period) async {
@@ -55,17 +55,17 @@ class StatsRepository {
 
 }
 
-class LabelStat {
-  final String? labelName;
-  final String? labelColor;
+class CategoryStat {
+  final String? categoryName;
+  final String? categoryColor;
   final double total;
 
-  LabelStat({this.labelName, this.labelColor, required this.total});
+  CategoryStat({this.categoryName, this.categoryColor, required this.total});
 
-  factory LabelStat.fromJson(Map<String, dynamic> json) {
-    return LabelStat(
-      labelName: json['label_name'] as String?,
-      labelColor: json['label_color'] as String?,
+  factory CategoryStat.fromJson(Map<String, dynamic> json) {
+    return CategoryStat(
+      categoryName: json['category_name'] as String?,
+      categoryColor: json['category_color'] as String?,
       total: double.parse(json['total'].toString()),
     );
   }
@@ -126,9 +126,9 @@ final summaryProvider = FutureProvider.autoDispose<StatsSummary>((ref) {
   return ref.watch(statsRepositoryProvider).getSummary(period);
 });
 
-final byLabelProvider = FutureProvider.autoDispose<List<LabelStat>>((ref) {
+final byCategoryProvider = FutureProvider.autoDispose<List<CategoryStat>>((ref) {
     final period = ref.watch(selectedPeriodProvider);
-    return ref.watch(statsRepositoryProvider).getByLabel(period);
+    return ref.watch(statsRepositoryProvider).getByCategory(period);
 });
 
 final byTransactionNameProvider = FutureProvider.autoDispose<List<TransactionNameStat>>((ref) {

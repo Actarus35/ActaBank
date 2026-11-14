@@ -47,7 +47,7 @@ class DashboardScreen extends ConsumerWidget {
                 Text('Dépenses par catégorie',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                _LabelDonut(),
+                _CategoryDonut(),
                 SizedBox(height: 24),
                 Text('Évolution du solde',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -99,18 +99,18 @@ class _SummarySection extends ConsumerWidget {
   }
 }
 
-class _LabelDonut extends ConsumerWidget {
-  const _LabelDonut();
+class _CategoryDonut extends ConsumerWidget {
+  const _CategoryDonut();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final data = ref.watch(byLabelProvider);
+    final data = ref.watch(byCategoryProvider);
     return data.when(
       loading: () => const Center(child: Padding(
         padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
       error: (e, _) => Center(child: Text('Erreur: $e')),
-      data: (labels) {
-        if (labels.isEmpty) {
+      data: (categories) {
+        if (categories.isEmpty) {
           return const Text('Aucune dépense sur la période');
         }
         return SizedBox(
@@ -120,11 +120,11 @@ class _LabelDonut extends ConsumerWidget {
               sectionsSpace: 2,
               centerSpaceRadius: 50,
               sections: [
-                for (final l in labels)
+                for (final l in categories)
                   PieChartSectionData(
                     value: l.total,
-                    color: _colorFromName(l.labelColor),
-                    title: l.labelName ?? 'Sans label',
+                    color: _colorFromName(l.categoryColor),
+                    title: l.categoryName ?? 'Sans categorie',
                     radius: 60,
                     titleStyle: const TextStyle(
                       fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),

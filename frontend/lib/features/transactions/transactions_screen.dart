@@ -34,7 +34,7 @@ class TransactionsScreen extends ConsumerWidget {
               return ListTile(
                 title: Text(t.name),
                 subtitle: Text(
-                  '${formatDate(t.date)} · ${t.labelName ?? 'Sans label'}'),
+                  '${formatDate(t.date)} · ${t.categoryName ?? 'Sans catégorie'}'),
                 trailing: Text(
                   '${t.amount.toStringAsFixed(2)} €',
                   style: TextStyle(
