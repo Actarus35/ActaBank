@@ -104,10 +104,18 @@ sur des valeurs monétaires.
 | Colonne | Type | Contraintes |
 |---|---|---|
 | `rectrans_id` | INTEGER | clé primaire |
+| `rectrans_name` | VARCHAR | NOT NULL — libellé recopié sur les transactions générées |
+| `rectrans_amount` | NUMERIC(10,2) | NOT NULL — montant signé |
 | `rectrans_frequency` | enum `Frequency` | NOT NULL |
 | `rectrans_start_date` | DATETIME | NOT NULL |
-| `rectrans_end_date` | DATETIME | nullable |
+| `rectrans_end_date` | DATETIME | nullable (récurrence sans fin) |
+| `rectrans_last_generated` | DATETIME | nullable — dernière échéance générée |
+| `rectrans_transmet_id` | INTEGER | FK → `transaction_methods`, NOT NULL |
+| `rectrans_label_id` | INTEGER | FK → `labels`, nullable |
 | `user_id` | INTEGER | FK → `users`, NOT NULL |
+
+Une récurrence est un **modèle** : à la connexion, l'API génère les transactions échues depuis `rectrans_last_generated`, ce qui rend l'opération répétable sans doublon.
+
 
 ## Énumérations
 

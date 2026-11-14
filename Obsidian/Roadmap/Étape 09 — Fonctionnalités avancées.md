@@ -1,11 +1,12 @@
 ---
 étape: 9
-titre: "Fonctionnalités avancées"
-statut: "à-faire"
+titre: Fonctionnalités avancées
+statut: en-cours
 techno: []
-début: 
+début: 2026-08-04
 fin: 
-tags: [roadmap]
+tags: 
+    - roadmap
 ---
 
 # Étape 09 — Fonctionnalités avancées
@@ -14,9 +15,9 @@ tags: [roadmap]
 Amélioration de l'application une fois le socle stable.
 
 ## Tâches
-- [ ] Dépenses récurrentes
+- [X] Dépenses récurrentes
 - [ ] Import de relevés bancaires
-- [ ] Catégories hiérarchiques
+- [ ] Catégories et tags - [[Décision - Catégories et tags]]
 - [ ] Statistiques avancées
 - [ ] Sauvegardes automatiques
 - [ ] Logs

@@ -1,7 +1,7 @@
 ---
 étape: 8
-titre: "Accès distant WireGuard"
-statut: "à-faire"
+titre: Accès distant WireGuard
+statut: à-faire
 techno: [WireGuard]
 début: 
 fin: 

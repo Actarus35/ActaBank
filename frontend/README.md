@@ -1,17 +1,33 @@
-# actabank
+# ActaBank — Frontend
 
-A new Flutter project.
+Application Flutter d'ActaBank : connexion, tableau de bord et gestion des transactions.
 
-## Getting Started
+## Stack
 
-This project is a starting point for a Flutter application.
+- **Flutter** (cible web pour l'instant)
+- **Riverpod** — gestion d'état
+- **dio** — appels à l'API, avec ajout automatique du token JWT
+- **flutter_secure_storage** — stockage du token
+- **fl_chart** — graphiques
 
-A few resources to get you started if this is your first Flutter project:
+## Organisation
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```
+lib/
+├── core/        # configuration, client HTTP, stockage du token, formatage
+└── features/    # un dossier par fonctionnalité
+    ├── auth/          # connexion, état d'authentification
+    ├── dashboard/     # tableau de bord et statistiques
+    ├── transactions/  # liste et formulaire
+    ├── settings/      # paramètres (à venir)
+    └── shell/         # navigation principale
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Lancer
+
+```bash
+flutter pub get
+flutter run -d web-server --web-port=8081
+```
+
+Puis ouvrir http://localhost:8081. L'adresse de l'API se règle dans `lib/core/config.dart`.

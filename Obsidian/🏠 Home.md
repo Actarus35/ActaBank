@@ -48,10 +48,10 @@ LIMIT 7
 
 | Couche | Techno |
 |---|---|
-| Base de données | [[SQLite]] → [[PostgreSQL]] |
+| Base de données | [[PostgreSQL]] ([[SQLite]] pour les tests) |
 | ORM | [[SQLAlchemy]] |
-| BI | [[Apache Superset]] |
+| BI | Graphique dans le frontend ([[Apache Superset]] abandonné) |
 | Backend | [[Python]] + [[FastAPI]] |
 | Auth | [[JWT]] + [[bcrypt]] |
-| Frontend | À décider |
+| Frontend | [[Flutter]] |
 | Accès distant | [[WireGuard]] |

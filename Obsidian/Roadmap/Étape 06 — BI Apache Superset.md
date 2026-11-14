@@ -1,11 +1,14 @@
 ---
 étape: 6
-titre: "BI Apache Superset"
-statut: "à-faire"
-techno: [Apache Superset, PostgreSQL]
+titre: BI Apache Superset
+statut: abandonné
+techno: 
+    - Apache Superset
+    - PostgreSQL
 début: 
 fin: 
-tags: [roadmap]
+tags:
+    - roadmap
 ---
 
 # Étape 06 — BI Apache Superset
@@ -31,6 +34,7 @@ De vrais tableaux de bord financiers.
 
 ## Décisions prises
 
+Étape abandonnée (août 2026). Superset se connecte directement à PostgreSQL : il contournerait le cloisonnement par utilisateur, qui est appliqué par l'API et non par la base. Les graphiques sont donc réalisés dans le frontend, à partir d'endpoints d'agrégation (`/stats/...`) filtrés par utilisateur.
 
 ## Blocages rencontrés
 

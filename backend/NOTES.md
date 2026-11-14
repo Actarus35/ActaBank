@@ -17,23 +17,3 @@ On peut également accéder à un autre type de doc sur [ce lien](http://127.0.0
 alembic revision --autogenerate -m "nom de la modif"
 alembic upgrade head
 ```
-
-### Alembic
-
-#### Commandes pour resynchroniser la base de données et alembic
-
-```bash
-# 1 - Supprimer toutes les anciennes migrations
-rm -rf alembic/versions/*
-
-# 2 - Supprimer la DB
-rm database.db
-
-# 3 - Générer une vraie migration initiale propre
-alembic revision --autogenerate -m "initial schema"
-
-# 4 - Appliquer
-alembic upgrade head
-```
-
-

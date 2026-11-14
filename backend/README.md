@@ -19,6 +19,7 @@ backend/
 ├── schemas/       # schémas Pydantic (la forme du JSON de l'API)
 ├── crud/          # accès aux données, filtré par propriétaire
 ├── routes/        # endpoints HTTP, un fichier par ressource
+├── services/      # logique métier transverse (génération des récurrences)
 ├── enums/         # énumérations (AccountType, Color, Frequency, ...)
 ├── alembic/       # migrations de schéma
 ├── tests/         # suite pytest
@@ -75,6 +76,16 @@ Documentation interactive : http://127.0.0.1:8000/docs
 Toutes les routes de ressources exigent un en-tête `Authorization: Bearer <token>`.
 Chaque donnée appartient à un utilisateur : personne ne peut lire, modifier ou référencer
 les données d'un autre.
+
+## Statistiques
+
+Routes d'agrégation pour le tableau de bord, toutes filtrées par utilisateur et acceptant
+`?period=month|3months|6months|all` :
+
+- `GET /stats/summary` — solde, revenus, dépenses
+- `GET /stats/by-label` — dépenses par étiquette
+- `GET /stats/balance-over-time` — évolution du solde
+- `GET /stats/by-name` — dépenses par libellé de transaction
 
 ## Tests
 

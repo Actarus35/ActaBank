@@ -16,7 +16,7 @@ Je me dirigerait plus tard versr une base de données **PostgreSQL** qui sera pl
 
 J'utiliserais également **SQLAlchemy** pour le mapping objet (ORM)
 
-Enfin, je souhaiterais intégrer **Apache Superset**, une alternative open source et gratuite à PowerBI afin de faire de jolis graphique et de rendre ces données du mieux possible.
+J'avais prévu d'intégrer **Apache Superset** pour les graphiques. J'y ai renoncé : branché directement sur la base, il aurait contourné le cloisonnement des données par utilisateur, qui est assuré par l'API. Les graphiques sont donc faits dans le frontend, à partir de routes d'agrégation dédiées.
 
 ### Backend
 
@@ -36,7 +36,7 @@ Enfin, je mettrais peut-être plus tard en place un Refresh Token afin d'amélio
 
 ### Frontend
 
-Pour le frontend, je ne suis pas encore sûr, il me faudra creuser un peu les 2 options mais j'aimerais faire une application multi-plateforme (accessible sur windows, linux, android, web, apple, ...). Ainsi **Flutter** semble tout trouver, néanmoins, je l'ai déjà utiliser dans un autre projet dans le cadre de mes études, ainsi, dans une démarche d'apprentissage, j'aurais plutôt tendance à me tourner vers une **PWA (Progressive Web App)**, **React Native** (même si j'ai également déjà fait du React) ou encore des **frameworks de développement hybride**.
+J'ai finalement retenu **Flutter**, pour son aspect multi-plateforme (web, Android, bureau) à partir d'un seul code. La gestion d'état est faite avec **Riverpod**, les appels à l'API avec **dio** et les graphiques avec **fl_chart**.
 
 ### Exposition en dehors du réseau local
 
@@ -122,18 +122,9 @@ A faire :
 Résultat attendu :
 - Même API, base de données plus robuste
 
-### 6 - BI : Apache Superset
+### 6 - BI : Apache Superset (abandonné)
 
-##### Objectif : Visualiser les données avant le Frontend
-
-A faire :
-- Installer Superset
-- Connecter PostgreSQL
-- Créer le dashboard, les filtres, les graphiques
-- Apprendre les agrégations, les dimensions, les time-series
-
-Résultat attendu :
-- De vrais tableaux de bord financiers
+Étape abandonnée : les tableaux de bord sont réalisés dans le frontend (voir étape 7), à partir de routes d'agrégation de l'API, afin de respecter le cloisonnement des données par utilisateur.
 
 ### 7 - Frontend
 
@@ -166,7 +157,7 @@ Résultat attendu :
 A faire quand tout le reste fonctionne avec un code clean :
 - dépenses récurrentes
 - import de relevés bancaires
-- catégories hiérarchiques
+- catégories (une par transaction) et tags (plusieurs par transaction)
 - statistiques avancées
 - sauvegardes auto
 - logs
