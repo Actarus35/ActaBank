@@ -17,7 +17,7 @@ def _tx(client, headers, tid, name, amount, date, label_id=None):
 
 
 def test_stats_protegees(client):
-    for url in ["/stats/summary", "/stats/by-label", "/stats/balance-over-time", "/stats/by-beneficiary"]:
+    for url in ["/stats/summary", "/stats/by-label", "/stats/balance-over-time", "/stats/by-name"]:
         assert client.get(url).status_code == 401
 
 
@@ -55,14 +55,14 @@ def test_by_label(client, alice):
     assert all(float(d["total"]) > 0 for d in data.values())   # revenu exclu
 
 
-def test_by_beneficiary_trie(client, alice):
+def test_by_name_trie(client, alice):
     tid = _setup(client, alice)
     now = datetime.now()
     _tx(client, alice, tid, "Carrefour", "-120.00", now.replace(day=5))
     _tx(client, alice, tid, "Carrefour", "-80.00", now.replace(day=5))
     _tx(client, alice, tid, "Loyer", "-800.00", now.replace(day=5))
-    data = client.get("/stats/by-beneficiary?period=month", headers=alice).json()
-    assert [d["beneficiary"] for d in data] == ["Loyer", "Carrefour"]
+    data = client.get("/stats/by-name?period=month", headers=alice).json()
+    assert [d["name"] for d in data] == ["Loyer", "Carrefour"]
     assert float(data[0]["total"]) == 800
 
 

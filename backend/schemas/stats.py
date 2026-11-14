@@ -30,6 +30,6 @@ class BalanceOverTime(BaseModel):
     points: list[BalancePoint]
 
 
-class BeneficiaryStat(BaseModel):
-    beneficiary: str
+class TransactionNameStat(BaseModel):
+    name: str
     total: Decimal

@@ -109,7 +109,7 @@ def get_balance_over_time(db: Session, user_id: int, period: StatsPeriod, now: d
     return {"opening": opening, "points": points}
 
 
-def get_by_beneficiary(db: Session, user_id: int, period: StatsPeriod, now: datetime | None = None):
+def get_by_name(db: Session, user_id: int, period: StatsPeriod, now: datetime | None = None):
     now = now or datetime.now()
     start = period_start(period, now)
 
@@ -119,7 +119,7 @@ def get_by_beneficiary(db: Session, user_id: int, period: StatsPeriod, now: date
 
     rows = (
         db.query(
-            Transaction.transac_name.label("beneficiary"),
+            Transaction.transac_name.label("name"),
             func.sum(-Transaction.transac_amount).label("total"),
         )
         .filter(*conds)
@@ -127,4 +127,4 @@ def get_by_beneficiary(db: Session, user_id: int, period: StatsPeriod, now: date
         .order_by(func.sum(-Transaction.transac_amount).desc())
         .all()
     )
-    return [{"beneficiary": r.beneficiary, "total": r.total} for r in rows]
+    return [{"name": r.name, "total": r.total} for r in rows]
