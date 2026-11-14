@@ -23,6 +23,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   DateTime _date = DateTime.now();
   int? _methodId;
   int? _categoryId;
+  final Set<int> _tagIds = {};
   bool _saving = false;
   String? _error;
 
@@ -59,6 +60,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           description: description.isEmpty ? null : description,
           methodId: _methodId!,
           categoryId: _categoryId,
+          tagIds: _tagIds.toList(),
         );
       ref.invalidate(transactionsProvider);
       if (mounted) Navigator.of(context).pop();
@@ -76,6 +78,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   Widget build(BuildContext context) {
     final methods = ref.watch(transactionMethodsProvider);
     final categories = ref.watch(categoriesProvider);
+    final tags = ref.watch(tagsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nouvelle transaction')),
@@ -153,6 +156,26 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   ],
                   onChanged: (v) => setState(() => _categoryId = v),
                 ),
+              ),
+              const SizedBox(height: 12),
+              tags.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (e, _) => const Text('Tags indisponible'),
+                data: (list) => list.isEmpty
+                  ? const SizedBox.shrink()
+                  : Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final t in list)
+                        FilterChip(
+                          label: Text(t.name),
+                          selected: _tagIds.contains(t.id),
+                          onSelected: (on) => setState(() {
+                            on ? _tagIds.add(t.id) : _tagIds.remove(t.id);
+                          }),
+                        ),
+                    ],
+                  ),
               ),
               const SizedBox(height: 12),
               TextFormField(

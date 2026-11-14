@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../settings/references_repository.dart';
 
 class Transaction {
     final int id;
@@ -12,6 +13,7 @@ class Transaction {
     final String? categoryName;
     final String? categoryColor;
     final String methodType;
+    final List<Tag> tags;
 
     Transaction({
         required this.id,
@@ -22,6 +24,7 @@ class Transaction {
         this.categoryName,
         this.categoryColor,
         required this.methodType,
+        required this.tags,
     });
 
     factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -35,6 +38,7 @@ class Transaction {
             categoryName: category?['category_name'] as String?,
             categoryColor: category?['category_color'] as String?,
             methodType: json['method']['transmet_type'] as String,
+            tags: (json['tags'] as List).map((e) => Tag.fromJson(e)).toList(),
         );
     }
 }
@@ -59,6 +63,7 @@ class TransactionsRepository {
       String? description,
       required int methodId,
       int? categoryId,
+      List<int> tagIds = const[],
     }) async {
       await _dio.post('/transactions/', data: {
         'transac_name': name,
@@ -67,6 +72,7 @@ class TransactionsRepository {
         'transac_description': description,
         'transmet_id': methodId,
         'category_id': categoryId,
+        'tag_ids': tagIds,
       });
     }
 }

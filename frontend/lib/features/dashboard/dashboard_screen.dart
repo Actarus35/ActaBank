@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
+import '../../core/colors.dart';
 import 'stats_repository.dart';
+import '../settings/references_repository.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -46,6 +48,8 @@ class DashboardScreen extends ConsumerWidget {
                 SizedBox(height: 24),
                 Text('Dépenses par catégorie',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                _TagFilter(),
                 SizedBox(height: 8),
                 _CategoryDonut(),
                 SizedBox(height: 24),
@@ -99,6 +103,35 @@ class _SummarySection extends ConsumerWidget {
   }
 }
 
+class _TagFilter extends ConsumerWidget {
+  const _TagFilter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tags = ref.watch(tagsProvider);
+    final selected = ref.watch(selectedTagProvider);
+    return tags.when(
+      loading: () => const SizedBox.shrink(),
+      error: (e, _) => const SizedBox.shrink(),
+      data: (list) {
+        if (list.isEmpty) return const SizedBox.shrink();
+        return Wrap(
+          spacing: 8,
+          children: [
+            for (final t in list)
+              ChoiceChip(
+                label: Text(t.name),
+                selected: selected == t.id,
+                onSelected: (on) =>
+                  ref.read(selectedTagProvider.notifier).state = on ? t.id : null,
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _CategoryDonut extends ConsumerWidget {
   const _CategoryDonut();
 
@@ -123,7 +156,7 @@ class _CategoryDonut extends ConsumerWidget {
                 for (final l in categories)
                   PieChartSectionData(
                     value: l.total,
-                    color: _colorFromName(l.categoryColor),
+                    color: colorFromName(l.categoryColor),
                     title: l.categoryName ?? 'Sans categorie',
                     radius: 60,
                     titleStyle: const TextStyle(
@@ -236,23 +269,6 @@ class _TransactionNameList extends ConsumerWidget {
   }
 }
 
-
-Color _colorFromName(String? name) {
-  switch (name) {
-    case 'BLACK': return Colors.black;
-    case 'BLUE': return Colors.blue;
-    case 'BROWN': return Colors.brown;
-    case 'GRAY': return Colors.grey;
-    case 'GREEN': return Colors.green;
-    case 'ORANGE': return Colors.orange;
-    case 'PINK': return Colors.pink;
-    case 'PURPLE': return Colors.purple;
-    case 'RED': return Colors.red;
-    case 'WHITE': return Colors.white;
-    case 'YELLOW': return Colors.yellow;
-    default: return Colors.grey.shade400;
-  }
-}
 
 class _Kpi extends StatelessWidget {
   final String label;

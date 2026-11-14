@@ -38,8 +38,11 @@ class StatsRepository {
     return StatsSummary.fromJson(response.data);
   }
 
-  Future<List<CategoryStat>> getByCategory(String period) async {
-    final response = await _dio.get('/stats/by-category', queryParameters: {'period': period});
+  Future<List<CategoryStat>> getByCategory(String period, {int? tagId}) async {
+    final response = await _dio.get('/stats/by-category', queryParameters: {
+      'period': period,
+      if (tagId != null) 'tag_id': tagId,
+    });
     return (response.data as List).map((e) => CategoryStat.fromJson(e)).toList();
   }
 
@@ -120,6 +123,7 @@ final statsRepositoryProvider = Provider<StatsRepository>((ref) {
 });
 
 final selectedPeriodProvider = StateProvider<String>((ref) => 'month');
+final selectedTagProvider = StateProvider.autoDispose<int?>((ref) => null);
 
 final summaryProvider = FutureProvider.autoDispose<StatsSummary>((ref) {
   final period = ref.watch(selectedPeriodProvider);
@@ -128,7 +132,8 @@ final summaryProvider = FutureProvider.autoDispose<StatsSummary>((ref) {
 
 final byCategoryProvider = FutureProvider.autoDispose<List<CategoryStat>>((ref) {
     final period = ref.watch(selectedPeriodProvider);
-    return ref.watch(statsRepositoryProvider).getByCategory(period);
+    final tagId = ref.watch(selectedTagProvider);
+    return ref.watch(statsRepositoryProvider).getByCategory(period, tagId: tagId);
 });
 
 final byTransactionNameProvider = FutureProvider.autoDispose<List<TransactionNameStat>>((ref) {
