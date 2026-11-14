@@ -48,9 +48,9 @@ class StatsRepository {
     return BalanceOverTime.fromJson(response.data);
   }
 
-  Future<List<BeneficiaryStat>> getByBeneficiary(String period) async {
-    final response = await _dio.get('/stats/by-beneficiary', queryParameters: {'period': period});
-    return (response.data as List).map((e) => BeneficiaryStat.fromJson(e)).toList();
+  Future<List<TransactionNameStat>> getByTransactionName(String period) async {
+    final response = await _dio.get('/stats/by-name', queryParameters: {'period': period});
+    return (response.data as List).map((e) => TransactionNameStat.fromJson(e)).toList();
   }
 
 }
@@ -101,15 +101,15 @@ class BalanceOverTime {
   }
 }
 
-class BeneficiaryStat {
-  final String beneficiary;
+class TransactionNameStat {
+  final String name;
   final double total;
 
-  BeneficiaryStat({required this.beneficiary, required this.total});
+  TransactionNameStat({required this.name, required this.total});
 
-  factory BeneficiaryStat.fromJson(Map<String, dynamic> json) {
-    return BeneficiaryStat(
-      beneficiary: json['beneficiary'] as String,
+  factory TransactionNameStat.fromJson(Map<String, dynamic> json) {
+    return TransactionNameStat(
+      name: json['name'] as String,
       total: double.parse(json['total'].toString()),
     );
   }
@@ -131,9 +131,9 @@ final byLabelProvider = FutureProvider.autoDispose<List<LabelStat>>((ref) {
     return ref.watch(statsRepositoryProvider).getByLabel(period);
 });
 
-final byBeneficiaryProvider = FutureProvider.autoDispose<List<BeneficiaryStat>>((ref) {
+final byTransactionNameProvider = FutureProvider.autoDispose<List<TransactionNameStat>>((ref) {
     final period = ref.watch(selectedPeriodProvider);
-    return ref.watch(statsRepositoryProvider).getByBeneficiary(period);
+    return ref.watch(statsRepositoryProvider).getByTransactionName(period);
 });
 
 final balanceOverTimeProvider = FutureProvider.autoDispose<BalanceOverTime>((ref) {

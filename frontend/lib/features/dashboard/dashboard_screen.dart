@@ -54,10 +54,10 @@ class DashboardScreen extends ConsumerWidget {
                 SizedBox(height: 8),
                 _BalanceChart(),
                 SizedBox(height: 24),
-                Text('Répartition par bénéficiaire',
+                Text('Répartition par libellé',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                _BeneficiaryList(),
+                _TransactionNameList(),
               ],
             ),
           ),
@@ -191,12 +191,12 @@ class _BalanceChart extends ConsumerWidget {
   }
 }
 
-class _BeneficiaryList extends ConsumerWidget {
-  const _BeneficiaryList();
+class _TransactionNameList extends ConsumerWidget {
+  const _TransactionNameList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final data = ref.watch(byBeneficiaryProvider);
+    final data = ref.watch(byTransactionNameProvider);
     return data.when(
       loading: () => const Center(child: Padding(
         padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
@@ -206,26 +206,26 @@ class _BeneficiaryList extends ConsumerWidget {
         final max = list.first.total;
         return Column(
           children: [
-            for (final b in list.take(8))
+            for (final n in list.take(8))
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   children: [
                     SizedBox(
                       width: 90,
-                      child: Text(b.beneficiary, overflow: TextOverflow.ellipsis),
+                      child: Text(n.name, overflow: TextOverflow.ellipsis),
                     ),
                     Expanded(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
-                          value: max > 0 ? b.total / max : 0,
+                          value: max > 0 ? n.total / max : 0,
                           minHeight: 10,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('${b.total.toStringAsFixed(0)} €'),
+                    Text('${n.total.toStringAsFixed(0)} €'),
                   ],
                 ),
               ),
