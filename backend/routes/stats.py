@@ -17,8 +17,8 @@ def read_summary(period: StatsPeriod = StatsPeriod.MONTH, db: Session = Depends(
 
 
 @router.get("/by-category", response_model=list[CategoryStat])
-def read_by_category(period: StatsPeriod = StatsPeriod.MONTH, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return crud.get_by_category(db, current_user.user_id, period)
+def read_by_category(period: StatsPeriod = StatsPeriod.MONTH, tag_id: int | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return crud.get_by_category(db, current_user.user_id, period, tag_id)
 
 
 @router.get("/balance-over-time", response_model=BalanceOverTime)

@@ -55,6 +55,22 @@ def test_by_category(client, alice):
     assert all(float(d["total"]) > 0 for d in data.values())   # revenu exclu
 
 
+def test_by_category_filtre_par_tag(client, alice):
+    tid = _setup(client, alice)
+    now = datetime.now()
+    courses = client.post("/categories/", json={"category_name": "Courses", "category_color": "GREEN"}, headers=alice).json()
+    roumanie = client.post("/tags/", json={"tag_name": "Roumanie", "tag_color": "BLUE"}, headers=alice).json()
+    base = {"transac_date": now.replace(day=5).isoformat(), "transmet_id": tid, "category_id": courses["category_id"]}
+    client.post("/transactions/", json={**base, "transac_name": "A", "transac_amount": "-30.00", "tag_ids": [roumanie["tag_id"]]}, headers=alice)
+    client.post("/transactions/", json={**base, "transac_name": "B", "transac_amount": "-70.00"}, headers=alice)
+
+    tout = client.get("/stats/by-category?period=month", headers=alice).json()
+    filtre = client.get(f"/stats/by-category?period=month&tag_id={roumanie['tag_id']}", headers=alice).json()
+    assert float(tout[0]["total"]) == 100.0
+    assert float(filtre[0]["total"]) == 30.0
+
+
+
 def test_by_name_trie(client, alice):
     tid = _setup(client, alice)
     now = datetime.now()

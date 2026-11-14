@@ -5,10 +5,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from collections import OrderedDict
 
-from models.transactions import Transaction
 from models.accounts import Account
 from models.categories import Category
+from models.tags import transaction_tags
 from enums.stats_period import StatsPeriod
+from models.transactions import Transaction
 
 
 def period_start(period: StatsPeriod, now: datetime) -> datetime | None:
@@ -50,13 +51,15 @@ def get_summary(db: Session, user_id: int, period: StatsPeriod, now: datetime | 
     }
 
 
-def get_by_category(db: Session, user_id: int, period: StatsPeriod, now: datetime | None = None):
+def get_by_category(db: Session, user_id: int, period: StatsPeriod, tag_id: int | None = None, now: datetime | None = None):
     now = now or datetime.now()
     start = period_start(period, now)
 
     conds = [Transaction.user_id == user_id, Transaction.transac_amount < 0]  # dépenses
     if start is not None:
         conds.append(Transaction.transac_date >= start)
+    if tag_id is not None:
+        conds.append(Transaction.tags.any(transaction_tags.c.tag_id == tag_id))
 
     rows = (
         db.query(

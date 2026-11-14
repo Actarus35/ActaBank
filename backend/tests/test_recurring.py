@@ -1,18 +1,20 @@
 from datetime import datetime
 from decimal import Decimal
 
-from services.recurring import generate_due_transactions
-from models.recurring_transactions import RecurringTransaction
-from models.transactions import Transaction
-from crud import users, banks, accounts, transaction_methods
+from models.tags import Tag
+from enums.colors import Color
 from schemas.users import UserCreate
 from schemas.banks import BankCreate
-from schemas.accounts import AccountCreate
-from schemas.transaction_methods import TransactionMethodCreate
-from enums.colors import Color
-from enums.account_type import AccountType
-from enums.transaction_type import TransactionType
 from enums.frequency import Frequency
+from schemas.accounts import AccountCreate
+from enums.account_type import AccountType
+from models.transactions import Transaction
+from enums.transaction_type import TransactionType
+from services.recurring import generate_due_transactions
+from crud import users, banks, accounts, transaction_methods
+from models.recurring_transactions import RecurringTransaction
+from schemas.transaction_methods import TransactionMethodCreate
+
 
 def _prereqs(db):
     u = users.create_user(db, UserCreate(
@@ -77,3 +79,19 @@ def test_date_de_fin(db_session):
     u, m = _prereqs(db_session)
     _rule(db_session, u.user_id, m.transmet_id, rectrans_end_date=datetime(2026, 2, 15))
     assert generate_due_transactions(db_session, u.user_id, now=datetime(2026, 6, 1)) == 2  # janvier + février
+
+
+def test_recopie_des_tags(db_session):
+    u, m = _prereqs(db_session)
+    tag = Tag(tag_name="Logement", user_id=u.user_id)
+    db_session.add(tag)
+    db_session.commit()
+    rule = _rule(db_session, u.user_id, m.transmet_id)
+    rule.tags = [tag]
+    db_session.commit()
+
+    generate_due_transactions(db_session, u.user_id, now=datetime(2026, 2, 15))
+
+    generees = db_session.query(Transaction).all()
+    assert len(generees) == 2
+    assert all([t.tag_name for t in tx.tags] == ["Logement"] for tx in generees)
