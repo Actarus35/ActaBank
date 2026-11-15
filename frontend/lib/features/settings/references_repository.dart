@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
@@ -53,6 +54,34 @@ class Tag {
   }
 }
 
+class ReferencesRepository {
+  final Dio _dio;
+  ReferencesRepository(this._dio);
+
+  Future<void> saveCategory({int? id, required String name, required String color}) async {
+    final data = {'category_name': name, 'category_color': color};
+    if (id == null) {
+      await _dio.post('/categories/', data: data);
+    } else {
+      await _dio.patch('/categories/$id', data: data);
+    }
+  }
+
+  Future<void> deleteCategory(int id) => _dio.delete('/categories/$id');
+
+  Future<void> saveTag({int? id, required String name, required String color}) async {
+    final data = {'tag_name': name, 'tag_color': color};
+    if (id == null) {
+      await _dio.post('/tags/', data: data);
+    } else {
+      await _dio.patch('/tags/$id', data: data);
+    }
+  }
+
+  Future<void> deleteTag(int id) => _dio.delete('/tags/$id');
+
+}
+
 final categoriesProvider = FutureProvider.autoDispose<List<Category>>((ref) async {
   final response = await ref.watch(dioProvider).get('/categories/');
   return (response.data as List)
@@ -72,4 +101,8 @@ final tagsProvider = FutureProvider.autoDispose<List<Tag>>((ref) async {
   return (response.data as List)
     .map((e) => Tag.fromJson(e))
     .toList();
+});
+
+final referencesRepositoryProvider = Provider<ReferencesRepository>((ref) {
+  return ReferencesRepository(ref.watch(dioProvider));
 });

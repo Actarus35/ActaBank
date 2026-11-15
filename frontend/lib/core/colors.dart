@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 
+const colorNames = [
+  'BLACK', 'BLUE', 'BROWN', 'GRAY', 'GREEN', 'ORANGE',
+  'PINK', 'PURPLE', 'RED', 'WHITE', 'YELLOW',
+];
+
 Color colorFromName(String? name) {
   switch (name) {
     case 'BLACK': return Colors.black;

@@ -160,7 +160,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               const SizedBox(height: 12),
               tags.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => const Text('Tags indisponible'),
+                error: (e, _) => const Text('Tags indisponibles'),
                 data: (list) => list.isEmpty
                   ? const SizedBox.shrink()
                   : Wrap(
