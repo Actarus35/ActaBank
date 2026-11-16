@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'categories_screen.dart';
 import 'tags_screen.dart';
+import 'banks_screen.dart';
+import 'accounts_screen.dart';
+import 'categories_screen.dart';
+
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -26,6 +29,22 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const TagsScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_balance_outlined),
+            title: const Text('Banques'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BanksScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_balance_wallet_outlined),
+            title: const Text('Comptes'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AccountsScreen()),
             ),
           ),
         ],
