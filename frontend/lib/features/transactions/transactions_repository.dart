@@ -78,7 +78,7 @@ class TransactionsRepository {
         'transac_amount': amount.toStringAsFixed(2),
         'transac_description': description,
         'transmet_id': methodId,
-        'cetegory_id': categoryId,
+        'category_id': categoryId,
         'tag_ids': tagIds,
       };
       if (id == null) {

@@ -1,6 +1,7 @@
 import 'package:actabank/features/settings/methods_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../recurring/recurring_screen.dart';
 import 'tags_screen.dart';
 import 'banks_screen.dart';
 import 'accounts_screen.dart';
@@ -54,6 +55,14 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const MethodsScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.repeat),
+            title: const Text('Récurrences'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const RecurringScreen()),
             ),
           ),
         ],
