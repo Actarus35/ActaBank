@@ -19,22 +19,32 @@ class Category {
   }
 }
 
+const methodTypeLabels = {
+  'CARTE': 'Carte',
+  'VIREMENT': 'Virement',
+  'CHEQUE': 'Chèque',
+  'ESPECE': 'Espèce',
+};
+
 class TransactionMethod {
   final int id;
   final String type;
+  final int? accountId;
   final String? accountName;
 
-  TransactionMethod({required this.id, required this.type, this.accountName});
+  TransactionMethod({required this.id, required this.type, this.accountId, this.accountName});
 
   factory TransactionMethod.fromJson(Map<String, dynamic> json) {
     final account = json['account'] as Map<String, dynamic>?;
     return TransactionMethod(
       id: json['transmet_id'] as int,
       type: json['transmet_type'] as String,
+      accountId: json['account_id'] as int?,
       accountName: account?['account_name'] as String?,
     );
   }
 
+  String get typeLabel => methodTypeLabels[type] ?? type;
   String get displayName => accountName == null ? type : '$type · $accountName';
 }
 
@@ -122,6 +132,15 @@ class ReferencesRepository {
     }
   }
 
+  Future<void> saveMethod({int? id, required String type, int? accountId, String? accountName}) async {
+    final data = {'transmet_type': type, 'account_id': accountId};
+    if (id == null) {
+      await _dio.post('/transaction_methods/', data: data);
+    } else {
+      await _dio.patch('/transaction_methods/$id', data: data);
+    }
+  }
+
   Future<void> saveTag({int? id, required String name, required String color}) async {
     final data = {'tag_name': name, 'tag_color': color};
     if (id == null) {
@@ -156,17 +175,19 @@ class ReferencesRepository {
     if (id == null) {
       await _dio.post('/accounts/', data: data);
     } else {
-      await _dio.patch('accounts/$id', data: data);
+      await _dio.patch('/accounts/$id', data: data);
     }
   }
 
   Future<void> deleteCategory(int id) => _dio.delete('/categories/$id');
 
+  Future<void> deleteMethod(int id) => _dio.delete('/transaction_methods/$id');
+
   Future<void> deleteTag(int id) => _dio.delete('/tags/$id');
 
   Future<void> deleteBank(int id) => _dio.delete('/banks/$id');
 
-  Future<void> deleteAccount(int id) => _dio.delete('/banks/$id');
+  Future<void> deleteAccount(int id) => _dio.delete('/accounts/$id');
 
 }
 

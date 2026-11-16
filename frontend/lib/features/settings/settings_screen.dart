@@ -1,3 +1,4 @@
+import 'package:actabank/features/settings/methods_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'tags_screen.dart';
@@ -45,6 +46,14 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AccountsScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.credit_card),
+            title: const Text('Moyen de paiement'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const MethodsScreen()),
             ),
           ),
         ],

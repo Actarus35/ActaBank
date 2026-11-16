@@ -24,7 +24,7 @@ class AccountsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Supprimer « ${account.name} » ?'),
-        content: const Text('Les transactions concernées seront conservées, sans compte.'),
+        content: const Text('Cette action est définitive'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -47,7 +47,7 @@ class AccountsScreen extends ConsumerWidget {
         context,
         e.response?.statusCode == 409
           ? "Ce compte possède encore des moyens de paiement : supprime-les d'abord"
-          : 'Impossible de supprimer la banque',
+          : 'Impossible de supprimer le compte',
       );
     }
   }
@@ -67,7 +67,7 @@ class AccountsScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Erreur : $e')),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(child: Text('Aucune compte'));
+            return const Center(child: Text('Aucun compte'));
           }
           return ListView.builder(
             itemCount: list.length,
