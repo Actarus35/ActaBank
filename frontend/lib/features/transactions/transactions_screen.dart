@@ -58,6 +58,19 @@ class TransactionsScreen extends ConsumerWidget {
                       ),
                   ],
                 ),
+                trailing: Text(
+                  '${t.amount.toStringAsFixed(2)} €',
+                  style: TextStyle(
+                    color: t.amount < 0 ? Colors.red : Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => TransactionFormScreen(transaction: t),
+                  ),
+                ),
               );
             },
           );

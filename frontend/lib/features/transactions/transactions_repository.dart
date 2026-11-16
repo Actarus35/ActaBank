@@ -10,8 +10,10 @@ class Transaction {
     final DateTime date;
     final double amount;
     final String? description;
+    final int? categoryId;
     final String? categoryName;
     final String? categoryColor;
+    final int methodId;
     final String methodType;
     final List<Tag> tags;
 
@@ -21,8 +23,10 @@ class Transaction {
         required this.date,
         required this.amount,
         this.description,
+        required this.categoryId,
         this.categoryName,
         this.categoryColor,
+        required this.methodId,
         required this.methodType,
         required this.tags,
     });
@@ -35,8 +39,10 @@ class Transaction {
             date: DateTime.parse(json['transac_date'] as String),
             amount: double.parse(json['transac_amount'].toString()),
             description: json['transac_description'] as String?,
+            categoryId: json['category_id'] as int?,
             categoryName: category?['category_name'] as String?,
             categoryColor: category?['category_color'] as String?,
+            methodId: json['transmet_id'] as int,
             methodType: json['method']['transmet_type'] as String,
             tags: (json['tags'] as List).map((e) => Tag.fromJson(e)).toList(),
         );
@@ -56,7 +62,8 @@ class TransactionsRepository {
         return list;
     }
 
-    Future<void> create({
+    Future<void> save({
+      int? id,
       required String name,
       required DateTime date,
       required double amount,
@@ -65,16 +72,23 @@ class TransactionsRepository {
       int? categoryId,
       List<int> tagIds = const[],
     }) async {
-      await _dio.post('/transactions/', data: {
+      final data = {
         'transac_name': name,
         'transac_date': date.toIso8601String(),
         'transac_amount': amount.toStringAsFixed(2),
         'transac_description': description,
         'transmet_id': methodId,
-        'category_id': categoryId,
+        'cetegory_id': categoryId,
         'tag_ids': tagIds,
-      });
+      };
+      if (id == null) {
+        await _dio.post('/transactions/', data: data);
+      } else {
+        await _dio.patch('/transactions/$id', data:data);
+      }
     }
+
+    Future<void> delete(int id) => _dio.delete('/transactions/$id');
 }
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {

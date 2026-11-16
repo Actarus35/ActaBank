@@ -7,7 +7,9 @@ import '../settings/references_repository.dart';
 import 'transactions_repository.dart';
 
 class TransactionFormScreen extends ConsumerStatefulWidget {
-  const TransactionFormScreen({super.key});
+  final Transaction? transaction;
+
+  const TransactionFormScreen({super.key, this.transaction});
 
   @override
   ConsumerState<TransactionFormScreen> createState() => _TransactionFormScreenState();
@@ -26,6 +28,22 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   final Set<int> _tagIds = {};
   bool _saving = false;
   String? _error;
+  
+  @override
+  void initState() {
+    super.initState();
+    final t = widget.transaction;
+    if (t != null) {
+      _name.text = t.name;
+      _amount.text = t.amount.abs().toStringAsFixed(2);
+      _description.text = t.description ?? '';
+      _isExpense = t.amount < 0;
+      _date = t.date;
+      _methodId = t.methodId;
+      _categoryId = t.categoryId;
+      _tagIds.addAll(t.tags.map((tag) => tag.id));
+    }
+  }
 
   @override
   void dispose() {
@@ -53,7 +71,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final description = _description.text.trim();
 
     try {
-      await ref.read(transactionsRepositoryProvider).create(
+      await ref.read(transactionsRepositoryProvider).save(
+          id: widget.transaction?.id,
           name: _name.text.trim(),
           date: _date,
           amount: _isExpense ? -value : value,
@@ -74,6 +93,42 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     }
   }
 
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer cette transaction ?'),
+        content: const Text('Cette action est définitive.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() { _saving = true; _error = null; });
+
+    try {
+      await ref.read(transactionsRepositoryProvider).delete(widget.transaction!.id);
+      ref.invalidate(transactionsProvider);
+      if (mounted) Navigator.of(context).pop();
+    } on DioException {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = 'Impossible de supprimer la transaction';
+        });
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final methods = ref.watch(transactionMethodsProvider);
@@ -81,7 +136,18 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final tags = ref.watch(tagsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nouvelle transaction')),
+      appBar: AppBar(
+        title: Text(widget.transaction == null
+          ? 'Nouvelle transaction'
+          : 'Modifier la transaction'),
+        actions: [
+          if (widget.transaction != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _saving ? null : _delete,
+            ),
+        ],
+      ),
       body: Center(
         child: Form(
           key: _formKey,
