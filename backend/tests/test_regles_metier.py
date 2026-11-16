@@ -43,3 +43,14 @@ def test_modification_des_tags(client, alice, univers_alice):
     assert len(sans_toucher["tags"]) == 1
     vide = client.patch(url, json={"tag_ids": []}, headers=alice).json()
     assert vide["tags"] == []
+
+
+def test_suppression_compte_puis_banque_vides(client, alice):
+    bank = client.post("/banks/", json={"bank_name": "CIC", "bank_color": "RED"}, headers=alice).json()
+    account = client.post("/accounts/", json={
+        "account_name": "Courant", "account_type": "COMPTE_COURANT", "bank_id": bank["bank_id"],
+    }, headers=alice).json()
+    assert client.delete(f"/accounts/{account['account_id']}", headers=alice).status_code == 204
+    assert client.delete(f"/banks/{bank['bank_id']}", headers=alice).status_code == 204
+    assert client.get("/accounts/", headers=alice).json() == []
+    assert client.get("/banks/", headers=alice).json() == []

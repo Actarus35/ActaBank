@@ -51,7 +51,7 @@ def delete_account(account_id: int, db: Session = Depends(get_db), current_user:
             status_code=409,
             detail="Ce compte est utilisé par des méthodes de paiement et ne peut pas être supprimé",
         )
-    crud.delete_account(db, account_id)
+    crud.delete_account(db, account_id, current_user.user_id)
 
 
 @router.patch("/{account_id}", response_model=schema.AccountRead)
