@@ -17,7 +17,7 @@ class TagsScreen extends ConsumerWidget {
   Future<void> _edit(BuildContext context, WidgetRef ref, [Tag? tag]) async {
     final result = await showNameColorDialog(
       context,
-      title: tag == null ? 'Nouvelle tag' : 'Modifier la tag',
+      title: tag == null ? 'Nouveau tag' : 'Modifier le tag',
       initialName: tag?.name,
       initialColor: tag?.color ?? 'WHITE',
     );
@@ -30,7 +30,7 @@ class TagsScreen extends ConsumerWidget {
       );
       ref.invalidate(tagsProvider);
     } on DioException {
-      if (context.mounted) _showError(context, "Impossible d'enregistrer la tag");
+      if (context.mounted) _showError(context, "Impossible d'enregistrer le tag");
     }
   }
 
@@ -57,7 +57,7 @@ class TagsScreen extends ConsumerWidget {
       await ref.read(referencesRepositoryProvider).deleteTag(tag.id);
       ref.invalidate(tagsProvider);
     } on DioException {
-      if (context.mounted) _showError(context, 'Impossible de supprimer la tag');
+      if (context.mounted) _showError(context, 'Impossible de supprimer le tag');
     }
   }
 
@@ -76,7 +76,7 @@ class TagsScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Erreur : $e')),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(child: Text('Aucune tag'));
+            return const Center(child: Text('Aucun tag'));
           }
           return ListView.builder(
             itemCount: list.length,

@@ -54,3 +54,16 @@ def test_suppression_compte_puis_banque_vides(client, alice):
     assert client.delete(f"/banks/{bank['bank_id']}", headers=alice).status_code == 204
     assert client.get("/accounts/", headers=alice).json() == []
     assert client.get("/banks/", headers=alice).json() == []
+
+
+def test_suppression_methode_utilisee_par_une_recurrence(client, alice):
+    methode = client.post("/transaction_methods/", json={"transmet_type": "VIREMENT"}, headers=alice).json()
+    regle = client.post("/recurring_transactions/", json={
+        "rectrans_name": "Loyer",
+        "rectrans_amount": "-800.00",
+        "rectrans_frequency": "MONTHLY",
+        "rectrans_start_date": "2099-01-01T00:00:00",
+        "rectrans_transmet_id": methode["transmet_id"],
+    }, headers=alice)
+    assert regle.status_code == 201
+    assert client.delete(f"/transaction_methods/{methode['transmet_id']}", headers=alice).status_code == 409

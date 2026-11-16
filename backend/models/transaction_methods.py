@@ -15,6 +15,7 @@ class TransactionMethod(Base):
 
     account = relationship("Account", back_populates="methods")
     transactions = relationship("Transaction", back_populates="method")
+    recurring_transactions = relationship("RecurringTransaction")
 
     def __repr__(self) -> str:
         return f"TransactionMethod(id={self.transmet_id!r}, type={self.transmet_type!r}, account_id={self.account_id!r})"

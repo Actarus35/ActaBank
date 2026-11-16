@@ -46,7 +46,7 @@ class MethodsScreen extends ConsumerWidget {
       _showError(
         context,
         e.response?.statusCode == 409
-          ? "Ce moyen de paiement est utilisé par des transactions"
+          ? "Ce moyen de paiement est utilisé par des transactions récurrentes"
           : 'Impossible de supprimer le moyen de paiement',
       );
     }
@@ -57,7 +57,7 @@ class MethodsScreen extends ConsumerWidget {
     final methods = ref.watch(transactionMethodsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Comptes')),
+      appBar: AppBar(title: const Text('Moyens de paiement')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _open(context),
         child: const Icon(Icons.add),
@@ -67,7 +67,7 @@ class MethodsScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Erreur : $e')),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(child: Text('Aucun compte'));
+            return const Center(child: Text('Aucun moyen de paiement'));
           }
           return ListView.builder(
             itemCount: list.length,

@@ -39,7 +39,7 @@ class BanksScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Supprimer « ${bank.name} » ?'),
-        content: const Text('Les transactions concernées seront conservées, sans banque.'),
+        content: const Text('Cette action est définitive.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),

@@ -45,7 +45,7 @@ class TransactionMethod {
   }
 
   String get typeLabel => methodTypeLabels[type] ?? type;
-  String get displayName => accountName == null ? type : '$type · $accountName';
+  String get displayName => accountName == null ? type : '$typeLabel · $accountName';
 }
 
 class Tag {
@@ -132,7 +132,7 @@ class ReferencesRepository {
     }
   }
 
-  Future<void> saveMethod({int? id, required String type, int? accountId, String? accountName}) async {
+  Future<void> saveMethod({int? id, required String type, int? accountId}) async {
     final data = {'transmet_type': type, 'account_id': accountId};
     if (id == null) {
       await _dio.post('/transaction_methods/', data: data);

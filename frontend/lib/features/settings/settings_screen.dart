@@ -51,7 +51,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.credit_card),
-            title: const Text('Moyen de paiement'),
+            title: const Text('Moyens de paiement'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const MethodsScreen()),
