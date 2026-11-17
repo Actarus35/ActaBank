@@ -46,7 +46,7 @@ class _HomeShellState extends State<HomeShell> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
+                  constraints: const BoxConstraints(maxWidth: 1440),
                   child: _screens[_index],
                 ),
               ),

@@ -9,6 +9,8 @@ class StatsSummary {
   final double depenses;
   final double variation;
   final int nbTransactions;
+  final int nbRevenus;
+  final int nbDepenses;
 
   StatsSummary({
     required this.solde,
@@ -16,6 +18,8 @@ class StatsSummary {
     required this.depenses,
     required this.variation,
     required this.nbTransactions,
+    required this.nbRevenus,
+    required this.nbDepenses,
   });
 
   factory StatsSummary.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,8 @@ class StatsSummary {
       depenses: double.parse(json['depenses'].toString()),
       variation: double.parse(json['variation'].toString()),
       nbTransactions: json['nb_transactions'] as int,
+      nbRevenus: json['nb_revenus'] as int,
+      nbDepenses: json['nb_depenses'] as int,
     );
   }
 }
@@ -41,7 +47,7 @@ class StatsRepository {
   Future<List<CategoryStat>> getByCategory(String period, {int? tagId}) async {
     final response = await _dio.get('/stats/by-category', queryParameters: {
       'period': period,
-      if (tagId != null) 'tag_id': tagId,
+      'tag_id': ?tagId,
     });
     return (response.data as List).map((e) => CategoryStat.fromJson(e)).toList();
   }
@@ -54,6 +60,16 @@ class StatsRepository {
   Future<List<TransactionNameStat>> getByTransactionName(String period) async {
     final response = await _dio.get('/stats/by-name', queryParameters: {'period': period});
     return (response.data as List).map((e) => TransactionNameStat.fromJson(e)).toList();
+  }
+
+  Future<List<MonthlyStat>> getMonthly({int months = 6}) async {
+    final response = await _dio.get('/stats/monthly', queryParameters: {'months': months});
+    return (response.data as List).map((e) => MonthlyStat.fromJson(e)).toList();
+  }
+
+  Future<Balances> getBalances() async {
+    final response = await _dio.get('/stats/balances');
+    return Balances.fromJson(response.data);
   }
 
 }
@@ -118,6 +134,65 @@ class TransactionNameStat {
   }
 }
 
+class MonthlyStat {
+  final DateTime start;
+  final double revenus;
+  final double depenses;
+
+  MonthlyStat({required this.start, required this.revenus, required this.depenses});
+
+  factory MonthlyStat.fromJson(Map<String, dynamic> json) {
+    return MonthlyStat(
+      start: DateTime.parse(json['month'] as String),
+      revenus: double.parse(json['revenus'].toString()),
+      depenses: double.parse(json['depenses'].toString()),
+    );
+  }
+}
+
+class AccountBalance {
+  final int id;
+  final String name;
+  final bool archived;
+  final String? bankName;
+  final String? bankColor;
+  final double balance;
+
+  AccountBalance({
+    required this.id,
+    required this.name,
+    required this.archived,
+    this.bankName,
+    this.bankColor,
+    required this.balance,
+  });
+
+  factory AccountBalance.fromJson(Map<String, dynamic> json) {
+    return AccountBalance(
+      id: json['account_id'] as int,
+      name: json['account_name'] as String,
+      archived: json['account_archived'] as bool,
+      bankName: json['bank_name'] as String?,
+      bankColor: json['bank_color'] as String?,
+      balance: double.parse(json['balance'].toString()),
+    );
+  }
+}
+
+class Balances {
+  final List<AccountBalance> accounts;
+  final double unassigned;
+
+  Balances({required this.accounts, required this.unassigned});
+
+  factory Balances.fromJson(Map<String, dynamic> json) {
+    return Balances(
+      accounts: (json['accounts'] as List).map((e) => AccountBalance.fromJson(e)).toList(),
+      unassigned: double.parse(json['unassigned'].toString()),
+    );
+  }
+}
+
 final statsRepositoryProvider = Provider<StatsRepository>((ref) {
   return StatsRepository(ref.watch(dioProvider));
 });
@@ -144,4 +219,12 @@ final byTransactionNameProvider = FutureProvider.autoDispose<List<TransactionNam
 final balanceOverTimeProvider = FutureProvider.autoDispose<BalanceOverTime>((ref) {
   final period = ref.watch(selectedPeriodProvider);
   return ref.watch(statsRepositoryProvider).getBalanceOverTime(period);
+});
+
+final monthlyProvider = FutureProvider.autoDispose<List<MonthlyStat>>((ref) {
+  return ref.watch(statsRepositoryProvider).getMonthly();
+});
+
+final balancesProvider = FutureProvider.autoDispose<Balances>((ref) {
+  return ref.watch(statsRepositoryProvider).getBalances();
 });

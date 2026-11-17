@@ -17,19 +17,21 @@ class LabelTone {
   const LabelTone({required this.solid, required this.background, required this.text});
 }
 
+
 const Map<String, (double, double, double)> _tones = {
-  'ORANGE': (0.66, 0.18, 45.0),
-  'BLUE': (0.55, 0.17, 255.0),
-  'GREEN': (0.60, 0.15, 150.0),
-  'PURPLE': (0.52, 0.20, 305.0),
-  'YELLOW': (0.76, 0.15, 85.0),
-  'PINK': (0.60, 0.20, 350.0),
-  'RED': (0.55, 0.22, 28.0),
-  'BROWN': (0.50, 0.08, 55.0),
-  'GRAY': (0.60, 0.01, 90.0),
-  'BLACK': (0.30, 0.01, 90.0),
-  'WHITE': (0.85, 0.01, 90.0),
+  'BLACK': (0.28, 0.01, 90.0),
+  'BROWN': (0.40, 0.07, 60.0),
+  'BLUE': (0.50, 0.17, 255.0),
+  'GRAY': (0.50, 0.01, 90.0),
+  'RED': (0.58, 0.21, 27.0),
+  'PURPLE': (0.64, 0.17, 305.0),
+  'GREEN': (0.66, 0.14, 165.0),
+  'PINK': (0.74, 0.13, 350.0),
+  'ORANGE': (0.78, 0.16, 62.0),
+  'YELLOW': (0.90, 0.16, 100.0),
+  'WHITE': (0.96, 0.005, 90.0),
 };
+
 
 LabelTone labelTone(String? name, Brightness brightness) {
   final (l, c, h) = _tones[name] ?? (0.60, 0.01, 90.0);
@@ -40,7 +42,7 @@ LabelTone labelTone(String? name, Brightness brightness) {
       text: oklch(0.47, c * 0.85, h),
     );
   }
-  final solid = oklch(0.75, c * 0.9, h);
+  final solid = oklch(0.25 + l * 0.68, c * 0.9, h);
   return LabelTone(
     solid: solid,
     background: solid.withValues(alpha: 0.18),

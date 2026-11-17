@@ -1,9 +1,10 @@
 import 'package:intl/intl.dart';
 
 final _amountFormat = NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2);
+final _roundedFormat = NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 0);
 
-String formatAmount(double value, {bool signed = false}) {
-  final text = _amountFormat.format(value.abs());
+String formatAmount(double value, {bool signed = false, bool rounded = false}) {
+  final text = (rounded ? _roundedFormat : _amountFormat).format(value.abs());
   if (!signed || value == 0) return text;
   return value > 0 ? '+$text' : '−$text';
 }

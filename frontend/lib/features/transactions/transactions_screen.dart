@@ -34,7 +34,7 @@ class TransactionsScreen extends ConsumerWidget {
                     Text('${formatDate(t.date)} · ${t.categoryName ?? 'Sans catégorie'}'),
                     if (t.tags.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 96),
+                        padding: const EdgeInsets.only(top: 4),
                         child: Wrap(
                           spacing: 6,
                           children: [

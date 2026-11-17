@@ -136,3 +136,15 @@ def test_balances(client, alice):
     assert float(d["unassigned"]) == -20.0
     solde = client.get("/stats/summary?period=all", headers=alice).json()["solde"]
     assert float(solde) == 830.0
+
+
+def test_by_category_trie_par_montant(client, alice):
+    tid = _setup(client, alice)
+    now = datetime.now()
+    loyer = client.post("/categories/", json={"category_name": "Logement", "category_color": "BROWN"}, headers=alice).json()["category_id"]
+    transport = client.post("/categories/", json={"category_name": "Transport", "category_color": "ORANGE"}, headers=alice).json()["category_id"]
+    _tx(client, alice, tid, "Loyer", "-650.00", now, category_id=loyer)
+    _tx(client, alice, tid, "Essence", "-80.00", now, category_id=transport)
+    _tx(client, alice, tid, "Divers", "-200.00", now)
+    data = client.get("/stats/by-category?period=all", headers=alice).json()
+    assert [float(c["total"]) for c in data] == [80.0, 200.0, 650.0]

@@ -80,6 +80,7 @@ def get_by_category(db: Session, user_id: int, period: StatsPeriod, tag_id: int 
         .outerjoin(Category, Transaction.category_id == Category.category_id)
         .filter(*conds)
         .group_by(Category.category_id, Category.category_name, Category.category_color)
+        .order_by(func.sum(-Transaction.transac_amount).desc())
         .all()
     )
     return [

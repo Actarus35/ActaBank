@@ -6,8 +6,9 @@ class SectionCard extends StatelessWidget {
   final String? title;
   final Widget? trailing;
   final Widget child;
+  final bool expand;
 
-  const SectionCard({super.key, this.title, this.trailing, required this.child});
+  const SectionCard({super.key, this.title, this.trailing, this.expand = false, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,7 @@ class SectionCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
             ],
-            child,
+            expand ? Expanded(child: child) : child,
           ],
         ),
       ),
