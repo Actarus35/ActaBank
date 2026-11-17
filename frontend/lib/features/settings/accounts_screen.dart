@@ -46,10 +46,43 @@ class AccountsScreen extends ConsumerWidget {
       _showError(
         context,
         e.response?.statusCode == 409
-          ? "Ce compte possède encore des moyens de paiement : supprime-les d'abord"
+          ? "Ce compte possède encore des moyens de paiement : archive le plutôt que de le supprimer"
           : 'Impossible de supprimer le compte',
       );
     }
+  }
+
+  Future<void> _toggleArchived(BuildContext context, WidgetRef ref, Account account) async {
+    try {
+      await ref.read(referencesRepositoryProvider).setAccountArchived(account.id, !account.archived);
+      ref.invalidate(accountsProvider);
+    } on DioException {
+      if (context.mounted) _showError(context, "Impossible de modifier l'archivage");
+    }
+  }
+  Widget _tile(BuildContext context, WidgetRef ref, Account a) {
+    return ListTile(
+      leading: const Icon(Icons.account_balance_wallet_outlined),
+      title: Text(a.name),
+      subtitle: Text('${a.bankName ?? 'Sans banque'} · ${a.typeLabel}'),
+      enabled: !a.archived,
+      onTap: () => _open(context, a),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: a.archived ? 'Désarchiver' : 'Archiver',
+            icon: Icon(a.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+            onPressed: () => _toggleArchived(context, ref, a),
+          ),
+          IconButton(
+            tooltip: 'Supprimer',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _delete(context, ref, a),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -69,21 +102,23 @@ class AccountsScreen extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('Aucun compte'));
           }
-          return ListView.builder(
-            itemCount: list.length,
-            itemBuilder: (context, i) {
-              final a = list[i];
-              return ListTile(
-                leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text(a.name),
-                subtitle: Text('${a.bankName ?? '—'} · ${a.typeLabel}'),
-                onTap: () => _open(context, a),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _delete(context, ref, a),
+          final active = list.where((a) => !a.archived).toList();
+          final archived = list.where((a) => a.archived).toList();
+          return ListView(
+            padding: const EdgeInsets.only(bottom: 88),
+            children: [
+              if (active.isEmpty)
+                const ListTile(title: Text('Aucun compte actif')),
+              for (final a in active) _tile(context, ref, a),
+              if (archived.isNotEmpty)
+                ExpansionTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: Text('Archivés (${archived.length})'),
+                  children: [
+                    for (final a in archived) _tile(context, ref, a),
+                  ],
                 ),
-              );
-            },
+            ],
           );
         },
       ),

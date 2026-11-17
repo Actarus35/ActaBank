@@ -231,8 +231,11 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                 initialValue: _methodId,
                 decoration: const InputDecoration(labelText: 'Moyen de paiement'),
                 items: [
-                  for (final m in list)
-                    DropdownMenuItem(value: m.id, child: Text(m.displayName)),
+                  for (final m in list.where((m) => !m.archived || m.id == _methodId))
+                    DropdownMenuItem(
+                      value: m.id,
+                      child: Text(m.archived ? '${m.displayName} (archivé)' : m.displayName),
+                    ),
                 ],
                 onChanged: (v) => setState(() => _methodId = v),
                 validator: (v) => v == null ? 'Obligatoire' : null,

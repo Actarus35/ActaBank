@@ -46,10 +46,43 @@ class MethodsScreen extends ConsumerWidget {
       _showError(
         context,
         e.response?.statusCode == 409
-          ? "Ce moyen de paiement est utilisé par des transactions récurrentes"
+          ? "Ce moyen de paiement est utilisé par des transactions récurrentes : archive le plutôt que de le supprimer"
           : 'Impossible de supprimer le moyen de paiement',
       );
     }
+  }
+
+  Future<void> _toggleArchived(BuildContext context, WidgetRef ref, TransactionMethod method) async {
+    try {
+      await ref.read(referencesRepositoryProvider).setMethodArchived(method.id, !method.archived);
+      ref.invalidate(transactionMethodsProvider);
+    } on DioException {
+      if (context.mounted) _showError(context, "Impossible de modifier l'archivage");
+    }
+  }
+  Widget _tile(BuildContext context, WidgetRef ref, TransactionMethod m) {
+    return ListTile(
+      leading: const Icon(Icons.credit_card),
+      title: Text(m.typeLabel),
+      subtitle: Text(m.accountName ?? 'Aucun compte'),
+      enabled: !m.archived,
+      onTap: () => _open(context, m),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: m.archived ? 'Désarchiver' : 'Archiver',
+            icon: Icon(m.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+            onPressed: () => _toggleArchived(context, ref, m),
+          ),
+          IconButton(
+            tooltip: 'Supprimer',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _delete(context, ref, m),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -69,21 +102,23 @@ class MethodsScreen extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('Aucun moyen de paiement'));
           }
-          return ListView.builder(
-            itemCount: list.length,
-            itemBuilder: (context, i) {
-              final m = list[i];
-              return ListTile(
-                leading: const Icon(Icons.credit_card),
-                title: Text(m.typeLabel),
-                subtitle: Text('${m.accountName ?? 'Aucun Compte'} · ${m.typeLabel}'),
-                onTap: () => _open(context, m),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _delete(context, ref, m),
+          final active = list.where((m) => !m.archived).toList();
+          final archived = list.where((m) => m.archived).toList();
+          return ListView(
+            padding: const EdgeInsets.only(bottom: 88),
+            children: [
+              if (active.isEmpty)
+                const ListTile(title: Text('Aucun moyen de paiement actif')),
+              for (final m in active) _tile(context, ref, m),
+              if (archived.isNotEmpty)
+                ExpansionTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: Text('Archivés (${archived.length})'),
+                  children: [
+                    for (final m in archived) _tile(context, ref, m),
+                  ],
                 ),
-              );
-            },
+            ],
           );
         },
       ),

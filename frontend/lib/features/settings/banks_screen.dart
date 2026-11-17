@@ -61,10 +61,43 @@ class BanksScreen extends ConsumerWidget {
       _showError(
         context,
         e.response?.statusCode == 409
-          ? "Cette banque possède encore des comptes : supprime-les d'abord"
+          ? "Cette banque possède encore des comptes : archive la plutôt que de la supprimer"
           : 'Impossible de supprimer la banque',
       );
     }
+  }
+
+  Future<void> _toggleArchived(BuildContext context, WidgetRef ref, Bank bank) async {
+    try {
+      await ref.read(referencesRepositoryProvider).setBankArchived(bank.id, !bank.archived);
+      ref.invalidate(banksProvider);
+    } on DioException {
+      if (context.mounted) _showError(context, "Impossible de modifier l'archivage");
+    }
+  }
+
+  Widget _tile(BuildContext context, WidgetRef ref, Bank b) {
+    return ListTile(
+      leading: CircleAvatar(radius: 12, backgroundColor: colorFromName(b.color)),
+      title: Text(b.name),
+      enabled: !b.archived,
+      onTap: () => _edit(context, ref, b),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: b.archived ? 'Désarchiver' : 'Archiver',
+            icon: Icon(b.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+            onPressed: () => _toggleArchived(context, ref, b),
+          ),
+          IconButton(
+            tooltip: 'Supprimer',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _delete(context, ref, b),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -84,20 +117,23 @@ class BanksScreen extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('Aucune banque'));
           }
-          return ListView.builder(
-            itemCount: list.length,
-            itemBuilder: (context, i) {
-              final c = list[i];
-              return ListTile(
-                leading: CircleAvatar(radius: 12, backgroundColor: colorFromName(c.color)),
-                title: Text(c.name),
-                onTap: () => _edit(context, ref, c),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _delete(context, ref, c),
+          final active = list.where((b) => !b.archived).toList();
+          final archived = list.where((b) => b.archived).toList();
+          return ListView(
+            padding: const EdgeInsets.only(bottom: 88),
+            children: [
+              if (active.isEmpty)
+                const ListTile(title: Text('Aucune banque active')),
+              for (final b in active) _tile(context, ref, b),
+              if (archived.isNotEmpty)
+                ExpansionTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: Text('Archivées (${archived.length})'),
+                  children: [
+                    for (final b in archived) _tile(context, ref, b),
+                  ],
                 ),
-              );
-            },
+            ],
           );
         },
       ),

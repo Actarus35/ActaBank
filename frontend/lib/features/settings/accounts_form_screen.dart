@@ -52,7 +52,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         name: _name.text.trim(),
         type: _type!,
         initialBalance: double.parse(_balance.text.replaceAll(',', '.')),
-        bankId: _bankId!,
+        bankId: _type == 'PORTEFEUILLE' ? null : _bankId,
       );
       ref.invalidate(accountsProvider);
       if (mounted) Navigator.of(context).pop();
@@ -97,7 +97,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               validator: (v) => v == null ? 'Obligatoire' : null,
             ),
             const SizedBox(height: 12),
-            banks.when(
+            if (_type != 'PORTEFEUILLE') ...[
+              banks.when(
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => const Text('Banques indisponibles'),
               data: (list) => DropdownButtonFormField<int>(
@@ -107,7 +108,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                   helperText: list.isEmpty ? "Crée d'abord une banque" : null,
                 ),
                 items: [
-                  for (final b in list)
+                  for (final b in list.where((b) => !b.archived || b.id == _bankId))
                     DropdownMenuItem(value: b.id, child: Text(b.name)),
                 ],
                 onChanged: (v) => setState(() => _bankId = v),
@@ -115,6 +116,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            ],
             TextFormField(
               controller: _balance,
               keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),

@@ -31,8 +31,9 @@ class TransactionMethod {
   final String type;
   final int? accountId;
   final String? accountName;
+  final bool archived;
 
-  TransactionMethod({required this.id, required this.type, this.accountId, this.accountName});
+  TransactionMethod({required this.id, required this.type, this.accountId, this.accountName, required this.archived});
 
   factory TransactionMethod.fromJson(Map<String, dynamic> json) {
     final account = json['account'] as Map<String, dynamic>?;
@@ -41,6 +42,7 @@ class TransactionMethod {
       type: json['transmet_type'] as String,
       accountId: json['account_id'] as int?,
       accountName: account?['account_name'] as String?,
+      archived: json['transmet_archived'] as bool,
     );
   }
 
@@ -68,14 +70,16 @@ class Bank {
   final int id;
   final String name;
   final String color;
+  final bool archived;
 
-  Bank({required this.id, required this.name, required this.color});
+  Bank({required this.id, required this.name, required this.color, required this.archived});
 
   factory Bank.fromJson(Map<String, dynamic> json) {
     return Bank(
       id: json['bank_id'] as int,
       name: json['bank_name'] as String,
       color: json['bank_color'] as String,
+      archived: json['bank_archived'] as bool,
     );
   }
 }
@@ -92,16 +96,18 @@ class Account {
   final String name;
   final String type;
   final double initialBalance;
-  final int bankId;
+  final int? bankId;
   final String? bankName;
+  final bool archived;
 
   Account({
     required this.id,
     required this.name,
     required this.type,
     required this.initialBalance,
-    required this.bankId,
+    this.bankId,
     this.bankName,
+    required this.archived,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
@@ -111,8 +117,9 @@ class Account {
       name: json['account_name'] as String,
       type: json['account_type'] as String,
       initialBalance: double.parse(json['account_initial_balance'].toString()),
-      bankId: json['bank_id'] as int,
+      bankId: json['bank_id'] as int?,
       bankName: bank?['bank_name'] as String?,
+      archived: json['account_archived'] as bool,
     );
   }
 
@@ -164,7 +171,7 @@ class ReferencesRepository {
     required String name,
     required String type,
     required double initialBalance,
-    required int bankId,
+    int? bankId,
   }) async {
     final data = {
       'account_name': name,
@@ -178,6 +185,16 @@ class ReferencesRepository {
       await _dio.patch('/accounts/$id', data: data);
     }
   }
+
+  Future<void> setBankArchived(int id, bool archived) =>
+      _dio.patch('/banks/$id', data: {'bank_archived': archived});
+
+  Future<void> setAccountArchived(int id, bool archived) =>
+      _dio.patch('/accounts/$id', data: {'account_archived': archived});
+
+  Future<void> setMethodArchived(int id, bool archived) =>
+      _dio.patch('/transaction_methods/$id', data: {'transmet_archived': archived});
+
 
   Future<void> deleteCategory(int id) => _dio.delete('/categories/$id');
 

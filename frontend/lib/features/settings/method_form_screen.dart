@@ -86,7 +86,7 @@ class _MethodFormScreenState extends ConsumerState<MethodFormScreen> {
                 decoration: const InputDecoration(labelText: 'Compte'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('Aucun compte')),
-                  for (final a in list)
+                  for (final a in list.where((a) => !a.archived || a.id == _accountId))
                     DropdownMenuItem(value: a.id, child: Text(a.name)),
                 ],
                 onChanged: (v) => setState(() => _accountId = v),
