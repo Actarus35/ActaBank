@@ -2,10 +2,15 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../auth/auth_controller.dart';
 import '../../core/colors.dart';
-import 'stats_repository.dart';
+import '../../core/format.dart';
+import '../../core/layout.dart';
+import '../../core/theme/app_palette.dart';
+import '../../core/widgets/pill_segmented.dart';
+import '../auth/auth_repository.dart';
+import '../auth/user_avatar.dart';
 import '../settings/references_repository.dart';
+import 'stats_repository.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -15,58 +20,83 @@ class DashboardScreen extends ConsumerWidget {
     final period = ref.watch(selectedPeriodProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ActaBank'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-          ),
-        ],
-      ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'month', label: Text('Ce mois')),
-                ButtonSegment(value: '3months', label: Text('3 mois')),
-                ButtonSegment(value: '6months', label: Text('6 mois')),
-                ButtonSegment(value: 'all', label: Text('Tout')),
+          const _Greeting(),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PillSegmented<String>(
+              options: const [
+                ('month', 'Ce mois'),
+                ('3months', '3 mois'),
+                ('6months', '6 mois'),
+                ('all', 'Tout'),
               ],
-              selected: {period},
-              onSelectionChanged: (s) =>
-                ref.read(selectedPeriodProvider.notifier).state = s.first,
+              selected: period,
+              onChanged: (p) => ref.read(selectedPeriodProvider.notifier).state = p,
             ),
           ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: const [
-                _SummarySection(),
-                SizedBox(height: 24),
-                Text('Dépenses par catégorie',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                _TagFilter(),
-                SizedBox(height: 8),
-                _CategoryDonut(),
-                SizedBox(height: 24),
-                Text('Évolution du solde',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                _BalanceChart(),
-                SizedBox(height: 24),
-                Text('Répartition par libellé',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                _TransactionNameList(),
-              ],
-            ),
-          ),
+          const SizedBox(height: 16),
+          const _SummarySection(),
+          const SizedBox(height: 24),
+          const Text('Dépenses par catégorie',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const _TagFilter(),
+          const SizedBox(height: 8),
+          const _CategoryDonut(),
+          const SizedBox(height: 24),
+          const Text('Évolution du solde',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const _BalanceChart(),
+          const SizedBox(height: 24),
+          const Text('Répartition par libellé',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const _TransactionNameList(),
         ],
       ),
+    );
+  }
+}
+
+class _Greeting extends ConsumerWidget {
+  const _Greeting();
+
+  static const _periodLabels = {
+    '3months': '3 derniers mois',
+    '6months': '6 derniers mois',
+    'all': 'Depuis toujours',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name = ref.watch(currentUsernameProvider).valueOrNull ?? '';
+    final period = ref.watch(selectedPeriodProvider);
+    final palette = context.palette;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bonjour $name 👋',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: palette.ink),
+              ),
+              Text(
+                _periodLabels[period] ?? formatMonthYear(DateTime.now()),
+                style: TextStyle(fontSize: 12.5, color: palette.muted),
+              ),
+            ],
+          ),
+        ),
+        if (!isWide(context)) const UserAvatar(),
+      ],
     );
   }
 }

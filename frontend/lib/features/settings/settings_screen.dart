@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
+import '../../core/widgets/pill_segmented.dart';
 import '../recurring/recurring_screen.dart';
 import 'tags_screen.dart';
 import 'banks_screen.dart';
@@ -130,14 +131,15 @@ class _AppearanceSection extends ConsumerWidget {
           const SizedBox(height: 16),
           Text('Thème', style: labelStyle),
           const SizedBox(height: 8),
-          SegmentedButton<ThemeMode>(
-            segments: const [
-              ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode_outlined), label: Text('Clair')),
-              ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode_outlined), label: Text('Sombre')),
-              ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto_outlined), label: Text('Système')),
+          PillSegmented<ThemeMode>(
+            expand: true,
+            options: const [
+              (ThemeMode.light, '☀ Clair'),
+              (ThemeMode.dark, '☾ Sombre'),
+              (ThemeMode.system, '⌘ Système'),
             ],
-            selected: {settings.mode},
-            onSelectionChanged: (s) => controller.setMode(s.first),
+            selected: settings.mode,
+            onChanged: controller.setMode,
           ),
         ],
       ),

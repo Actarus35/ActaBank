@@ -15,12 +15,6 @@ class TransactionsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Transactions')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const TransactionFormScreen()),
-        ),
-        child: const Icon(Icons.add),
-      ),
       body: transactions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur : $e')),
@@ -40,7 +34,7 @@ class TransactionsScreen extends ConsumerWidget {
                     Text('${formatDate(t.date)} · ${t.categoryName ?? 'Sans catégorie'}'),
                     if (t.tags.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.only(bottom: 96),
                         child: Wrap(
                           spacing: 6,
                           children: [
@@ -59,7 +53,7 @@ class TransactionsScreen extends ConsumerWidget {
                   ],
                 ),
                 trailing: Text(
-                  '${t.amount.toStringAsFixed(2)} €',
+                  formatAmount(t.amount, signed: true),
                   style: TextStyle(
                     color: t.amount < 0 ? Colors.red : Colors.green,
                     fontWeight: FontWeight.bold,

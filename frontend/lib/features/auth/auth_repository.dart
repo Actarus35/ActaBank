@@ -17,8 +17,18 @@ class AuthRepository {
     );
     await _storage.save(response.data['access_token'] as String);
   }
+
+  Future<String> me() async {
+    final response = await _dio.get('/auth/me');
+    return response.data['user_username'] as String;
+  }
+
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider), ref.watch(tokenStorageProvider));
+});
+
+final currentUsernameProvider = FutureProvider.autoDispose<String>((ref) {
+  return ref.watch(authRepositoryProvider).me();
 });
