@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from datetime import datetime
 
+from schemas.base import CreateModel
 from enums.user_role import UserRole
 
 
@@ -8,7 +9,7 @@ class UserBase(BaseModel):
     user_username: str = Field(min_length=3, max_length=30)
 
 
-class UserCreate(UserBase):
+class UserCreate(UserBase, CreateModel):
     user_password: str = Field(min_length=8, max_length=72)
 
     @field_validator("user_password")

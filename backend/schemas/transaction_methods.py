@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
+from schemas.base import CreateModel, UpdateModel
 from enums.transaction_type import TransactionType
 from schemas.accounts import AccountRead
 
@@ -10,7 +11,7 @@ class TransactionMethodBase(BaseModel):
     account_id: Optional[int] = None
 
 
-class TransactionMethodCreate(TransactionMethodBase):
+class TransactionMethodCreate(TransactionMethodBase, CreateModel):
     pass
 
 
@@ -21,5 +22,8 @@ class TransactionMethodRead(TransactionMethodBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class TransactionMethodUpdate(TransactionMethodBase):
+class TransactionMethodUpdate(UpdateModel):
+    non_nullable = frozenset({"transmet_type"})
+
     transmet_type: Optional[TransactionType] = None
+    account_id: Optional[int] = None
