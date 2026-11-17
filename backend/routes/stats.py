@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from dependencies import get_db, get_current_user
 
 from models.users import User
-from schemas.stats import StatsSummary, CategoryStat, BalanceOverTime, TransactionNameStat
+from schemas.stats import StatsSummary, CategoryStat, BalanceOverTime, TransactionNameStat, MonthlyStat, Balances
 from crud import stats as crud
 from enums.stats_period import StatsPeriod
 
@@ -29,3 +29,12 @@ def read_balance_over_time(period: StatsPeriod = StatsPeriod.MONTH, db: Session 
 @router.get("/by-name", response_model=list[TransactionNameStat])
 def read_by_name(period: StatsPeriod = StatsPeriod.MONTH, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return crud.get_by_name(db, current_user.user_id, period)
+
+@router.get("/monthly", response_model=list[MonthlyStat])
+def read_monthly(months: int = Query(6, ge=1, le=24), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return crud.get_monthly(db, current_user.user_id, months)
+
+
+@router.get("/balances", response_model=Balances)
+def read_balances(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return crud.get_balances(db, current_user.user_id)

@@ -100,3 +100,39 @@ def test_stats_isolation(client, alice, bob):
     s = client.get("/stats/summary?period=all", headers=bob).json()
     assert s["nb_transactions"] == 0 and float(s["solde"]) == 0
     assert client.get("/stats/by-category?period=all", headers=bob).json() == []
+
+
+def test_summary_compte_revenus_et_depenses(client, alice):
+    tid = _setup(client, alice)
+    now = datetime.now()
+    _tx(client, alice, tid, "Salaire", "2000.00", now.replace(day=2))
+    _tx(client, alice, tid, "A", "-10.00", now.replace(day=3))
+    _tx(client, alice, tid, "B", "-20.00", now.replace(day=3))
+    s = client.get("/stats/summary?period=month", headers=alice).json()
+    assert s["nb_revenus"] == 1
+    assert s["nb_depenses"] == 2
+
+
+def test_monthly(client, alice):
+    tid = _setup(client, alice)
+    debut_mois = datetime.now().replace(day=1, hour=12)
+    _tx(client, alice, tid, "Salaire", "2000.00", debut_mois)
+    _tx(client, alice, tid, "Courses", "-150.00", debut_mois)
+    _tx(client, alice, tid, "Ancien", "-40.00", debut_mois - relativedelta(months=2))
+    data = client.get("/stats/monthly?months=3", headers=alice).json()
+    assert len(data) == 3
+    assert [float(m["depenses"]) for m in data] == [40.0, 0.0, 150.0]
+    assert float(data[-1]["revenus"]) == 2000.0
+
+
+def test_balances(client, alice):
+    tid = _setup(client, alice, initial="1000.00")
+    especes = client.post("/transaction_methods/", json={"transmet_type": "ESPECE"}, headers=alice).json()["transmet_id"]
+    _tx(client, alice, tid, "Courses", "-150.00", datetime.now())
+    _tx(client, alice, especes, "Marché", "-20.00", datetime.now())
+    d = client.get("/stats/balances", headers=alice).json()
+    assert float(d["accounts"][0]["balance"]) == 850.0
+    assert d["accounts"][0]["bank_name"] == "CIC"
+    assert float(d["unassigned"]) == -20.0
+    solde = client.get("/stats/summary?period=all", headers=alice).json()["solde"]
+    assert float(solde) == 830.0
