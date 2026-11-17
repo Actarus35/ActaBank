@@ -162,6 +162,10 @@ A faire quand tout le reste fonctionne avec un code clean :
 - sauvegardes auto
 - logs
 - tests (100% de coverage)
+- transferts entre ses propres comptes (« transaction interne », ni dépense ni revenu)
+- à plus long terme : transferts entre utilisateurs de l'application et partage de dépenses
+  (type Tricount)
+
 
 ### 10 - Bonus
 

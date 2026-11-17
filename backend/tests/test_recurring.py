@@ -95,3 +95,11 @@ def test_recopie_des_tags(db_session):
     generees = db_session.query(Transaction).all()
     assert len(generees) == 2
     assert all([t.tag_name for t in tx.tags] == ["Logement"] for tx in generees)
+
+
+def test_methode_archivee_suspend_la_regle(db_session):
+    u, m = _prereqs(db_session)
+    _rule(db_session, u.user_id, m.transmet_id)
+    m.transmet_archived = True
+    db_session.commit()
+    assert generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15)) == 0

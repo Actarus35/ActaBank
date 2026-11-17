@@ -67,3 +67,25 @@ def test_suppression_methode_utilisee_par_une_recurrence(client, alice):
     }, headers=alice)
     assert regle.status_code == 201
     assert client.delete(f"/transaction_methods/{methode['transmet_id']}", headers=alice).status_code == 409
+
+
+def test_modification_d_une_recurrence(client, alice, univers_alice):
+    transmet_id = univers_alice["method"]["transmet_id"]
+    regle = client.post("/recurring_transactions/", json={
+        "rectrans_name": "Loyer",
+        "rectrans_amount": "-800.00",
+        "rectrans_frequency": "MONTHLY",
+        "rectrans_start_date": "2099-01-01T00:00:00",
+        "rectrans_transmet_id": transmet_id,
+    }, headers=alice).json()
+    url = f"/recurring_transactions/{regle['rectrans_id']}"
+
+    sans_methode = client.patch(url, json={"rectrans_amount": "-850.00"}, headers=alice)
+    assert sans_methode.status_code == 200
+    assert sans_methode.json()["rectrans_amount"] == "-850.00"
+
+    avec_methode = client.patch(url, json={"rectrans_name": "Loyer T2", "rectrans_transmet_id": transmet_id}, headers=alice)
+    assert avec_methode.status_code == 200
+    assert avec_methode.json()["rectrans_name"] == "Loyer T2"
+
+    assert client.patch("/recurring_transactions/9999", json={"rectrans_name": "X"}, headers=alice).status_code == 404

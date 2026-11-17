@@ -37,7 +37,7 @@ class RecurringTransactionUpdate(UpdateModel):
     })
 
     rectrans_name: Optional[str] = None
-    rectrans_amount: Optional[Decimal] = None
+    rectrans_amount: Optional[Money] = None
     rectrans_frequency: Optional[Frequency] = None
     rectrans_start_date: Optional[datetime] = None
     rectrans_end_date: Optional[datetime] = None

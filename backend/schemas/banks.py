@@ -17,13 +17,15 @@ class BankCreate(BankBase, CreateModel):
 
 class BankRead(BankBase):
     bank_id: int
+    bank_archived: bool
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class BankUpdate(UpdateModel):
-    non_nullable = frozenset({"bank_name", "bank_color"})
+    non_nullable = frozenset({"bank_name", "bank_color", "bank_archived"})
 
     bank_name: Optional[Name30] = None
     bank_color: Optional[Color] = None
     bank_description: Optional[str] = None
+    bank_archived: Optional[bool] = None

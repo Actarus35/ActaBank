@@ -41,7 +41,7 @@ class TransactionUpdate(TransactionBase, UpdateModel):
 
     transac_name: Optional[str] = None
     transac_date: Optional[datetime] = None
-    transac_amount: Optional[Decimal] = None
+    transac_amount: Optional[Money] = None
     transac_description: Optional[str] = None
     transmet_id: Optional[int] = None
     category_id: Optional[int] = None

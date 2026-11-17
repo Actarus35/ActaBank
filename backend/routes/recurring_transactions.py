@@ -14,9 +14,13 @@ from services.recurring import generate_due_transactions
 router = APIRouter(prefix="/recurring_transactions", tags=["recurring_transactions"])
 
 
-def check_recurring_refs(db, user_id, transmet_id, category_id, tag_ids):
-    if transmet_id is not None and not methods_crud.get_transaction_method(db, transmet_id, user_id):
-        raise HTTPException(status_code=422, detail="Méthode de paiement introuvable")
+def check_recurring_refs(db, user_id, transmet_id, category_id, tag_ids, current_transmet_id=None):
+    if transmet_id is not None:
+        method = methods_crud.get_transaction_method(db, transmet_id, user_id)
+        if not method:
+            raise HTTPException(status_code=422, detail="Méthode de paiement introuvable")
+        if method.transmet_archived and transmet_id != current_transmet_id:
+            raise HTTPException(status_code=422, detail="Méthode de paiement archivée")
     if category_id is not None and not categories_crud.get_category(db, category_id, user_id):
         raise HTTPException(status_code=422, detail="Categorie introuvable")
     if tag_ids and len(tags_crud.get_tags_by_ids(db, tag_ids, user_id)) != len(set(tag_ids)):
@@ -53,9 +57,17 @@ def delete_recurring_transaction(rectrans_id: int, db: Session = Depends(get_db)
 
 @router.patch("/{rectrans_id}", response_model=schema.RecurringTransactionRead)
 def update_recurring_transaction(rectrans_id: int, recurring_transaction_update: schema.RecurringTransactionUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    check_recurring_refs(db, current_user.user_id, recurring_transaction_update.rectrans_transmet_id, recurring_transaction_update.rectrans_category_id, recurring_transaction_update.tag_ids)
-    recurring_transaction = crud.modify_recurring_transaction(db, rectrans_id, current_user.user_id, recurring_transaction_update)
-    if not recurring_transaction:
+    existing = crud.get_recurring_transaction(db, rectrans_id, current_user.user_id)
+    if not existing:
         raise HTTPException(status_code=404, detail="Recurring transaction not found")
+    check_recurring_refs(
+        db,
+        current_user.user_id,
+        recurring_transaction_update.rectrans_transmet_id,
+        recurring_transaction_update.rectrans_category_id,
+        recurring_transaction_update.tag_ids,
+        current_transmet_id=existing.rectrans_transmet_id,
+    )
+    recurring_transaction = crud.modify_recurring_transaction(db, rectrans_id, current_user.user_id, recurring_transaction_update)
     generate_due_transactions(db, current_user.user_id)
     return recurring_transaction

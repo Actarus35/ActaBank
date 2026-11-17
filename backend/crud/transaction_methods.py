@@ -37,6 +37,14 @@ def modify_transaction_method(db: Session, transmet_id: int, user_id: int, trans
     for key, value in update_data.items():
         setattr(db_transmet, key, value)
 
+    db.flush()
+    db.refresh(db_transmet)
+    account = db_transmet.account
+    if update_data.get("transmet_archived") is False and account is not None:
+        account.account_archived = False
+        if account.bank is not None:
+            account.bank.bank_archived = False
+
     db.commit()
     db.refresh(db_transmet)
     return db_transmet

@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
 from models.recurring_transactions import RecurringTransaction
+from models.transaction_methods import TransactionMethod
 from models.transactions import Transaction
 
 
@@ -23,7 +24,12 @@ def generate_due_transactions(db: Session, user_id: int, now: datetime | None = 
     if now is None:
         now = datetime.now()
 
-    rules = db.query(RecurringTransaction).filter(RecurringTransaction.user_id == user_id).all()
+    rules = (
+        db.query(RecurringTransaction)
+        .join(TransactionMethod, RecurringTransaction.rectrans_transmet_id == TransactionMethod.transmet_id)
+        .filter(RecurringTransaction.user_id == user_id, TransactionMethod.transmet_archived.is_(False))
+        .all()
+    )
     created = 0
 
     for rule in rules:

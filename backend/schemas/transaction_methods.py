@@ -18,12 +18,14 @@ class TransactionMethodCreate(TransactionMethodBase, CreateModel):
 class TransactionMethodRead(TransactionMethodBase):
     transmet_id: int
     account: Optional[AccountRead] = None
+    transmet_archived: bool
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class TransactionMethodUpdate(UpdateModel):
-    non_nullable = frozenset({"transmet_type"})
+    non_nullable = frozenset({"transmet_type", "transmet_archived"})
 
     transmet_type: Optional[TransactionType] = None
     account_id: Optional[int] = None
+    transmet_archived: Optional[bool] = None
