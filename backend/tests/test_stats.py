@@ -148,3 +148,11 @@ def test_by_category_trie_par_montant(client, alice):
     _tx(client, alice, tid, "Divers", "-200.00", now)
     data = client.get("/stats/by-category?period=all", headers=alice).json()
     assert [float(c["total"]) for c in data] == [80.0, 200.0, 650.0]
+
+
+def test_balance_over_time_renvoie_le_debut_de_periode(client, alice):
+    _setup(client, alice)
+    d = client.get("/stats/balance-over-time?period=month", headers=alice).json()
+    debut = datetime.fromisoformat(d["start"])
+    assert (debut.day, debut.hour) == (1, 0)
+    assert client.get("/stats/balance-over-time?period=all", headers=alice).json()["start"] is None

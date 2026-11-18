@@ -106,9 +106,10 @@ class BalancePoint {
 
 class BalanceOverTime {
   final double opening;
+  final DateTime? start;
   final List<BalancePoint> points;
 
-  BalanceOverTime({required this.opening, required this.points});
+  BalanceOverTime({required this.opening, this.start, required this.points});
 
   factory BalanceOverTime.fromJson(Map<String, dynamic> json) {
     return BalanceOverTime(
@@ -116,6 +117,7 @@ class BalanceOverTime {
       points: (json['points'] as List)
           .map((e) => BalancePoint.fromJson(e))
           .toList(),
+      start: json['start'] == null ? null : DateTime.parse(json['start'] as String),
     );
   }
 }

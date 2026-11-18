@@ -799,6 +799,16 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
+double _niceStep(double range, {int target = 5}) {
+  if (range <= 0) return 1;
+  final raw = range / target;
+  final magnitude = math.pow(10, (math.log(raw) / math.ln10).floor()).toDouble();
+  for (final m in const [1.0, 2.0, 2.5, 5.0]) {
+    if (raw <= m * magnitude) return m * magnitude;
+  }
+  return 10 * magnitude;
+}
+
 class _BalanceCard extends ConsumerWidget {
   final bool expand;
 
@@ -819,9 +829,18 @@ class _BalanceCard extends ConsumerWidget {
       ),
       error: (e, _) => SectionCard(title: title, expand: expand, child: Text('Erreur : $e')),
       data: (b) {
+        final points = [
+          if (b.start != null) BalancePoint(date: b.start!, balance: b.opening),
+          ...b.points,
+          if (b.start != null || b.points.isNotEmpty)
+            BalancePoint(
+              date: DateTime.now(),
+              balance: b.points.isEmpty ? b.opening : b.points.last.balance,
+            ),
+        ];
         Widget? badge;
-        if (b.points.isNotEmpty && b.opening != 0) {
-          final change = (b.points.last.balance - b.opening) / b.opening.abs() * 100;
+        if (points.isNotEmpty && b.opening != 0) {
+          final change = (points.last.balance - b.opening) / b.opening.abs() * 100;
           final up = change >= 0;
           badge = Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -850,30 +869,60 @@ class _BalanceCard extends ConsumerWidget {
               ? Center(
                   child: Text('Aucun mouvement sur la période', style: TextStyle(color: palette.muted)),
                 )
-              : _chart(context, b),
+              : _chart(context, b, points),
           ),
         );
       },
     );
   }
 
-  Widget _chart(BuildContext context, BalanceOverTime b) {
+  Widget _chart(BuildContext context, BalanceOverTime b, List<BalancePoint> points) {
     final palette = context.palette;
     final accent = Theme.of(context).colorScheme.primary;
-    final axis = _timeAxis(b.points.first.date, b.points.last.date);
-    final lastX = axis.x(b.points.last.date);
+    final axis = _timeAxis(points.first.date, points.last.date);
+    final lastX = axis.x(points.last.date);
+    final firstX = axis.x(points.first.date);
+
+    final values = points.map((p) => p.balance);
+    final low = values.reduce(math.min);
+    final high = values.reduce(math.max);
+    final step = _niceStep(high == low ? math.max(high.abs(), 100) : high - low);
+    final minY = (low / step).floor() * step;
+    var maxY = (high / step).ceil() * step;
+    if (maxY == minY) maxY = minY + step;
 
     final axisStyle = TextStyle(fontSize: 10.5, color: palette.muted);
     const hidden = AxisTitles(sideTitles: SideTitles(showTitles: false));
 
     return LineChart(
       LineChartData(
-        minX: 0,
-        maxX: math.max(lastX, 1.0).toDouble(),
+        minX: firstX,
+        maxX: math.max(lastX, firstX + 1),
+        minY: minY,
+        maxY: maxY,
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
+          horizontalInterval: step,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(color: palette.border, strokeWidth: 1),
+        ),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => palette.ink,
+            getTooltipItems: (spots) => [
+              for (final s in spots)
+                LineTooltipItem(
+                  '${formatLongDate(points[s.spotIndex].date)}\n',
+                  TextStyle(color: palette.card, fontSize: 11),
+                  children: [
+                    TextSpan(
+                      text: formatAmount(s.y, signed: s.y < 0),
+                      style: TextStyle(color: palette.card, fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
         titlesData: FlTitlesData(
           topTitles: hidden,
@@ -882,19 +931,22 @@ class _BalanceCard extends ConsumerWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 58,
-              minIncluded: false,
-              maxIncluded: false,
+              interval: step,
               getTitlesWidget: (value, meta) => SideTitleWidget(
                 meta: meta,
-                child: Text(formatAmount(value, signed: value < 0, rounded: true), style: axisStyle),
+                child: Text(
+                  formatAmount(value, signed: value < 0, rounded: step >= 1),
+                  style: axisStyle,
+                ),
               ),
             ),
           ),
-                    bottomTitles: AxisTitles(
+          bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 24,
               interval: axis.interval,
+              minIncluded: false,
               maxIncluded: false,
               getTitlesWidget: (value, meta) {
                 final label = axis.label(value);
@@ -911,7 +963,7 @@ class _BalanceCard extends ConsumerWidget {
         lineBarsData: [
           LineChartBarData(
             spots: [
-              for (final p in b.points) FlSpot(axis.x(p.date), p.balance),
+              for (final p in points) FlSpot(axis.x(p.date), p.balance),
             ],
             color: accent,
             barWidth: 3,
@@ -933,22 +985,34 @@ class _TopNamesCard extends ConsumerWidget {
   static const _colors = ['ORANGE', 'BLUE', 'GREEN', 'PURPLE', 'YELLOW'];
   static const _rowGap = 11.0;
   static const _rowHeight = 30.0 + _rowGap;
+  static const _minColumnWidth = 220.0;
+  static const _columnGap = 24.0;
 
-  Widget _rows(BuildContext context, List<TransactionNameStat> list, int count) {
+  Widget _rows(
+    BuildContext context,
+    List<TransactionNameStat> items, {
+    required int firstRank,
+    required double highest,
+  }) {
     final palette = context.palette;
     final brightness = Theme.of(context).brightness;
-    final top = list.take(count).toList();
-    final highest = top.first.total;
     return Column(
       children: [
-        for (final (i, n) in top.indexed)
+        for (final (i, n) in items.indexed)
           Padding(
-            padding: EdgeInsets.only(bottom: i == top.length - 1 ? 0 : _rowGap),
+            padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : _rowGap),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
+                    SizedBox(
+                      width: 22,
+                      child: Text(
+                        '${firstRank + i + 1}.',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: palette.muted),
+                      ),
+                    ),
                     Expanded(
                       child: Text(
                         n.name,
@@ -965,6 +1029,7 @@ class _TopNamesCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Container(
                   height: 8,
+                  margin: const EdgeInsets.only(left: 22),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
                     color: palette.soft,
@@ -974,7 +1039,7 @@ class _TopNamesCard extends ConsumerWidget {
                     widthFactor: highest > 0 ? n.total / highest : 0,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: labelTone(_colors[i % _colors.length], brightness).solid,
+                        color: labelTone(_colors[(firstRank + i) % _colors.length], brightness).solid,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -1002,11 +1067,30 @@ class _TopNamesCard extends ConsumerWidget {
           if (list.isEmpty) {
             return Text('Aucune dépense sur la période', style: TextStyle(color: palette.muted));
           }
-          if (!expand) return _rows(context, list, 5);
+          final highest = list.first.total;
+          if (!expand) {
+            return _rows(context, list.take(5).toList(), firstRank: 0, highest: highest);
+          }
           return LayoutBuilder(
             builder: (context, c) {
-              final fits = ((c.maxHeight + _rowGap) / _rowHeight).floor();
-              return _rows(context, list, fits.clamp(1, 5));
+              final perColumn = ((c.maxHeight + _rowGap) / _rowHeight).floor().clamp(1, 10);
+              final columns = ((c.maxWidth + _columnGap) / (_minColumnWidth + _columnGap)).floor().clamp(1, 4);
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var col = 0; col < columns; col++) ...[
+                    if (col > 0) const SizedBox(width: _columnGap),
+                    Expanded(
+                      child: _rows(
+                        context,
+                        list.skip(col * perColumn).take(perColumn).toList(),
+                        firstRank: col * perColumn,
+                        highest: highest,
+                      ),
+                    ),
+                  ],
+                ],
+              );
             },
           );
         },

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 from enums.colors import Color
@@ -30,6 +31,7 @@ class BalancePoint(BaseModel):
 
 class BalanceOverTime(BaseModel):
     opening: Decimal
+    start: Optional[datetime] = None
     points: list[BalancePoint]
 
 

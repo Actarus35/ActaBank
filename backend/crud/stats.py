@@ -118,7 +118,7 @@ def get_balance_over_time(db: Session, user_id: int, period: StatsPeriod, now: d
         running += net
         points.append({"date": day, "balance": running})
 
-    return {"opening": opening, "points": points}
+    return {"opening": opening, "start": start, "points": points}
 
 
 def get_by_name(db: Session, user_id: int, period: StatsPeriod, now: datetime | None = None):
