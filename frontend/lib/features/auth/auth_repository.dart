@@ -9,6 +9,13 @@ class AuthRepository {
   final TokenStorage _storage;
   AuthRepository(this._dio, this._storage);
 
+  Future<void> register(String username, String password) async {
+    await _dio.post('/auth/register', data: {
+      'user_username': username,
+      'user_password': password,
+    });
+  }
+
   Future<void> login(String username, String password) async {
     final response = await _dio.post(
       '/auth/login',

@@ -10,6 +10,11 @@ class AuthController extends AsyncNotifier<bool> {
     return token != null;
   }
 
+  Future<void> register(String username, String password) async {
+    await ref.read(authRepositoryProvider).register(username, password);
+    await login(username, password);
+  }
+
   Future<void> login(String username, String password) async {
     await ref.read(authRepositoryProvider).login(username, password);
     state = const AsyncData(true);

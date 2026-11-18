@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     secret_key: str
     database_url: str
     algorithm: str = "HS256"
+    registration_open: bool = True
     access_token_expire_minutes: int = 30
     cors_origins: str = "http://localhost:8081"
 

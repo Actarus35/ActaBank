@@ -1,3 +1,5 @@
+from config import settings
+
 def test_inscription(client):
     reponse = client.post("/auth/register", json={
         "user_username": "alice",
@@ -62,3 +64,9 @@ def test_me_avec_token(client, alice):
     reponse = client.get("/auth/me", headers=alice)
     assert reponse.status_code == 200
     assert reponse.json()["user_username"] == "alice"
+
+
+def test_inscription_fermee(client, monkeypatch):
+    monkeypatch.setattr(settings, "registration_open", False)
+    r = client.post("/auth/register", json={"user_username": "bob", "user_password": "motdepasse123"})
+    assert r.status_code == 403

@@ -1,3 +1,4 @@
+from config import settings
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
@@ -17,6 +18,8 @@ DUMMY_HASH = "$2b$12$2Kus718s38qOwg/umswVNulVXwjm69JsPaEJzXr6SOvYff2AdOvuO"
 
 @router.post("/register", response_model=schema.UserRead, status_code=201)
 def register(user: schema.UserCreate, db: Session = Depends(get_db)):
+    if not settings.registration_open:
+        raise HTTPException(status_code=403, detail="Les inscriptions sont fermées")
     if crud.get_user_by_username(db, user.user_username):
         raise HTTPException(status_code=409, detail="Ce nom d'utilisateur est déjà pris")
     return crud.create_user(db, user)
