@@ -6,8 +6,9 @@ import 'references_repository.dart';
 
 class AccountFormScreen extends ConsumerStatefulWidget {
   final Account? account;
+  final int? initialBankId;
 
-  const AccountFormScreen({super.key, this.account});
+  const AccountFormScreen({super.key, this.account, this.initialBankId});
 
   @override
   ConsumerState<AccountFormScreen> createState() => _AccountFormScreenState();
@@ -32,6 +33,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       _balance.text = a.initialBalance.toStringAsFixed(2);
       _type = a.type;
       _bankId = a.bankId;
+    } else {
+      _bankId = widget.initialBankId;
     }
   }
 

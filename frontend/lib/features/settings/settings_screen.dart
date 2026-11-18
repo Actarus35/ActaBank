@@ -1,86 +1,99 @@
-import 'package:actabank/features/settings/methods_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/layout.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/pill_segmented.dart';
+import '../../core/widgets/section_card.dart';
 import '../recurring/recurring_screen.dart';
-import 'tags_screen.dart';
-import 'banks_screen.dart';
-import 'accounts_screen.dart';
+import 'banks_card.dart';
 import 'categories_screen.dart';
+import 'methods_screen.dart';
+import 'tags_screen.dart';
 
+List<Widget> _spaced(List<Widget> cards) => [
+  for (final (i, c) in cards.indexed) ...[
+    if (i > 0) const SizedBox(height: 14),
+    c,
+  ],
+];
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final wide = isWide(context);
+    final palette = context.palette;
+    const left = <Widget>[_AppearanceCard(), BanksCard()];
+    const right = <Widget>[_OtherSettingsCard()];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Paramètres')),
       body: ListView(
+        padding: EdgeInsets.fromLTRB(wide ? 24 : 16, wide ? 20 : 12, wide ? 24 : 16, 24),
         children: [
-          const _AppearanceSection(),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.category_outlined),
-            title: const Text('Catégories'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-            ),
+          Text(
+            'Paramètres',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: palette.ink),
           ),
-          ListTile(
-            leading: const Icon(Icons.sell_outlined),
-            title: const Text('Tags'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const TagsScreen()),
-            ),
+          Text(
+            'Crée, modifie et archive tes comptes, catégories, tags et paiements récurrents.',
+            style: TextStyle(fontSize: 12.5, color: palette.muted),
           ),
-          ListTile(
-            leading: const Icon(Icons.account_balance_outlined),
-            title: const Text('Banques'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BanksScreen()),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.account_balance_wallet_outlined),
-            title: const Text('Comptes'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AccountsScreen()),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.credit_card),
-            title: const Text('Moyens de paiement'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const MethodsScreen()),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.repeat),
-            title: const Text('Récurrences'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RecurringScreen()),
-            ),
-          ),
+          const SizedBox(height: 16),
+          if (wide)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _spaced(left)),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _spaced(right)),
+                ),
+              ],
+            )
+          else
+            ..._spaced([...left, ...right]),
         ],
       ),
-
     );
   }
 }
 
-class _AppearanceSection extends ConsumerWidget {
-  const _AppearanceSection();
+/// Temporaire : liens vers les anciens écrans, remplacés en R6b et R6c.
+class _OtherSettingsCard extends StatelessWidget {
+  const _OtherSettingsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget link(IconData icon, String title, Widget screen) => ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(title),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen)),
+    );
+
+    return SectionCard(
+      title: 'Autres réglages',
+      child: Column(
+        children: [
+          link(Icons.category_outlined, 'Catégories', const CategoriesScreen()),
+          link(Icons.sell_outlined, 'Tags', const TagsScreen()),
+          link(Icons.credit_card, 'Moyens de paiement', const MethodsScreen()),
+          link(Icons.repeat, 'Paiements récurrents', const RecurringScreen()),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppearanceCard extends ConsumerWidget {
+  const _AppearanceCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -93,8 +106,8 @@ class _AppearanceSection extends ConsumerWidget {
       color: context.palette.muted,
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return SectionCard(
+      title: '🎨 Apparence',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
