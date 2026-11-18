@@ -85,10 +85,14 @@ class Bank {
 }
 
 const accountTypeLabels = {
-  'COMPTE_COURANT': 'Compte courant',
-  'LIVRET_A': 'Livret A',
-  'LIVRET_JEUNE': 'Livret Jeune',
+  'COURANT': 'Compte courant',
+  'EPARGNE': 'Épargne',
   'PORTEFEUILLE': 'Portefeuille',
+  'PORTEFEUILLE_EN_LIGNE': 'Portefeuille en ligne',
+  'INVESTISSEMENT': 'Investissement',
+  'CRYPTO': 'Crypto-actifs',
+  'CREDIT': 'Crédit',
+  'AUTRE': 'Autre',
 };
 
 class Account {

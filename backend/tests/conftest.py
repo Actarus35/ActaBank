@@ -68,7 +68,7 @@ def univers_alice(client, alice):
     }, headers=alice).json()
     account = client.post("/accounts/", json={
         "account_name": "Courant",
-        "account_type": "COMPTE_COURANT",
+        "account_type": "COURANT",
         "bank_id": bank["bank_id"],
     }, headers=alice).json()
     method = client.post("/transaction_methods/", json={

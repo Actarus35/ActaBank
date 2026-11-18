@@ -10,7 +10,7 @@ def test_suppression_methode_utilisee(client, alice, univers_alice):
 
 def test_reference_inexistante(client, alice):
     reponse = client.post("/accounts/", json={
-        "account_name": "X", "account_type": "LIVRET_A", "bank_id": 9999,
+        "account_name": "X", "account_type": "EPARGNE", "bank_id": 9999,
     }, headers=alice)
     assert reponse.status_code == 422
 
@@ -48,7 +48,7 @@ def test_modification_des_tags(client, alice, univers_alice):
 def test_suppression_compte_puis_banque_vides(client, alice):
     bank = client.post("/banks/", json={"bank_name": "CIC", "bank_color": "RED"}, headers=alice).json()
     account = client.post("/accounts/", json={
-        "account_name": "Courant", "account_type": "COMPTE_COURANT", "bank_id": bank["bank_id"],
+        "account_name": "Courant", "account_type": "COURANT", "bank_id": bank["bank_id"],
     }, headers=alice).json()
     assert client.delete(f"/accounts/{account['account_id']}", headers=alice).status_code == 204
     assert client.delete(f"/banks/{bank['bank_id']}", headers=alice).status_code == 204

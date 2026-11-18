@@ -39,7 +39,7 @@ def test_modification_croisee_404(client, bob, univers_alice):
 def test_reference_croisee_422(client, bob, univers_alice):
     reponse = client.post("/accounts/", json={
         "account_name": "Vol",
-        "account_type": "LIVRET_A",
+        "account_type": "EPARGNE",
         "bank_id": univers_alice["bank"]["bank_id"],
     }, headers=bob)
     assert reponse.status_code == 422
@@ -52,7 +52,7 @@ def test_univers_alice_intact(client, alice, bob, univers_alice):
 
 def test_tag_croise_422(client, bob, univers_alice):
     b = client.post("/banks/", json={"bank_name": "BNP", "bank_color": "GREEN"}, headers=bob).json()
-    a = client.post("/accounts/", json={"account_name": "C", "account_type": "COMPTE_COURANT", "bank_id": b["bank_id"]}, headers=bob).json()
+    a = client.post("/accounts/", json={"account_name": "C", "account_type": "COURANT", "bank_id": b["bank_id"]}, headers=bob).json()
     m = client.post("/transaction_methods/", json={"transmet_type": "CARTE", "account_id": a["account_id"]}, headers=bob).json()
     reponse = client.post("/transactions/", json={
         "transac_name": "Vol",

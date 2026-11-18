@@ -17,11 +17,11 @@ def check_account_refs(db, user_id, bank_id):
         )
 
 def check_account_consistency(account_type, bank_id):
-    is_wallet = account_type == AccountType.WALLET
-    if is_wallet and bank_id is not None:
+    if not account_type.requires_bank and bank_id is not None:
         raise HTTPException(status_code=422, detail="Un portefeuille n'est rattaché à aucune banque")
-    if not is_wallet and bank_id is None:
+    if account_type.requires_bank and bank_id is None:
         raise HTTPException(status_code=422, detail="Ce type de compte doit être rattaché à une banque")
+
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 

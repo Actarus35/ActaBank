@@ -145,9 +145,14 @@ class _BankGroupState extends State<_BankGroup> {
   bool _expanded = true;
 
   static IconData _icon(String type) => switch (type) {
+    'COURANT' => Icons.credit_card,
     'PORTEFEUILLE' => Icons.account_balance_wallet_outlined,
-    'COMPTE_COURANT' => Icons.credit_card,
-    _ => Icons.savings_outlined,
+    'PORTEFEUILLE_EN_LIGNE' => Icons.phone_iphone,
+    'EPARGNE' => Icons.savings_outlined,
+    'INVESTISSEMENT' => Icons.trending_up,
+    'CRYPTO' => Icons.currency_bitcoin,
+    'CREDIT' => Icons.request_quote_outlined,
+    _ => Icons.account_balance_outlined,
   };
 
   @override

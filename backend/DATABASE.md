@@ -155,7 +155,7 @@ Définies dans `backend/enums/`. Les valeurs ci-dessous sont celles exposées pa
 | Enum | Valeurs (API) |
 |---|---|
 | `UserRole` | `USER`, `ADMIN` |
-| `AccountType` | `LIVRET_A`, `COMPTE_COURANT`, `LIVRET_JEUNE`, `PORTEFEUILLE` |
+| `AccountType` | `COURANT`, `PORTEFEUILLE`, `PORTEFEUILLE_EN_LIGNE`, `EPARGNE`, `INVESTISSEMENT`, `CRYPTO`, `CREDIT`, `AUTRE` |
 | `TransactionType` | `ESPECE`, `CARTE`, `VIREMENT`, `CHEQUE` |
 | `Color` | `BLACK`, `BLUE`, `BROWN`, `GRAY`, `GREEN`, `ORANGE`, `PINK`, `PURPLE`, `RED`, `WHITE`, `YELLOW` |
 | `Frequency` | `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY` |
@@ -165,8 +165,9 @@ Définies dans `backend/enums/`. Les valeurs ci-dessous sont celles exposées pa
 > nécessitera une migration** (`ALTER TYPE`), là où c'était gratuit avec SQLite.
 >
 > Le type natif stocke le **nom du membre** Python, tandis que l'API expose sa **valeur**.
-> Pour la plupart des membres nom = valeur, sauf `AccountType.WALLET` dont la valeur est
-> `PORTEFEUILLE` : la base contient donc `WALLET` et l'API renvoie `PORTEFEUILLE`.
+> Pour toutes les énumérations, nom du membre = valeur : la base et l'API contiennent la même chose.
+> Chaque `AccountType` a une **famille** (`AccountFamily` : disponible, épargne, placement, dette,
+> autre), calculée en Python et non stockée. Voir l'ADR « Types de compte génériques et nom libre ».
 
 ## Propriété et sécurité (multi-utilisateurs)
 

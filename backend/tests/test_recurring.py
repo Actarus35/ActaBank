@@ -27,7 +27,7 @@ def _prereqs(db):
         u.user_id)
     a = accounts.create_account(db, AccountCreate(
         account_name="Courant",
-        account_type=AccountType.COMPTE_COURANT,
+        account_type=AccountType.COURANT,
         bank_id=b.bank_id),
         u.user_id)
     m = transaction_methods.create_transaction_method(db, TransactionMethodCreate(

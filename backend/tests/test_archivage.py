@@ -43,5 +43,5 @@ def test_portefeuille_sans_banque(client, alice, univers_alice):
     assert sans_banque.json()["bank"] is None
     avec_banque = client.post("/accounts/", json={"account_name": "Poche", "account_type": "PORTEFEUILLE", "bank_id": bank_id}, headers=alice)
     assert avec_banque.status_code == 422
-    courant_sans_banque = client.post("/accounts/", json={"account_name": "Courant", "account_type": "COMPTE_COURANT"}, headers=alice)
+    courant_sans_banque = client.post("/accounts/", json={"account_name": "Courant", "account_type": "COURANT"}, headers=alice)
     assert courant_sans_banque.status_code == 422

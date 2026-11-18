@@ -35,6 +35,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       _bankId = a.bankId;
     } else {
       _bankId = widget.initialBankId;
+      _type = 'COURANT';
     }
   }
 
@@ -49,10 +50,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _saving = true; _error = null; });
 
+    final typed = _name.text.trim();
+    final name = typed.isEmpty ? accountTypeLabels[_type]! : typed;
+
     try {
       await ref.read(referencesRepositoryProvider).saveAccount(
         id: widget.account?.id,
-        name: _name.text.trim(),
+        name: name,
         type: _type!,
         initialBalance: double.parse(_balance.text.replaceAll(',', '.')),
         bankId: _type == 'PORTEFEUILLE' ? null : _bankId,
@@ -82,22 +86,28 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Text('Type', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final e in accountTypeLabels.entries)
+                  ChoiceChip(
+                    label: Text(e.value),
+                    selected: _type == e.key,
+                    onSelected: (_) => setState(() => _type = e.key),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _name,
-              decoration: const InputDecoration(labelText: 'Nom'),
-              validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Obligatoire' : null,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _type,
-              decoration: const InputDecoration(labelText: 'Type'),
-              items: [
-                for (final e in accountTypeLabels.entries)
-                  DropdownMenuItem(value: e.key, child: Text(e.value)),
-              ],
-              onChanged: (v) => setState(() => _type = v),
-              validator: (v) => v == null ? 'Obligatoire' : null,
+              decoration: InputDecoration(
+                labelText: 'Nom (facultatif)',
+                hintText: accountTypeLabels[_type],
+                helperText: 'Ex. Livret A, Compte joint, PEA…',
+              ),
             ),
             const SizedBox(height: 12),
             if (_type != 'PORTEFEUILLE') ...[

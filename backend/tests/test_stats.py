@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 def _setup(client, headers, initial="1000.00"):
     b = client.post("/banks/", json={"bank_name": "CIC", "bank_color": "RED"}, headers=headers).json()
-    a = client.post("/accounts/", json={"account_name": "C", "account_type": "COMPTE_COURANT", "bank_id": b["bank_id"], "account_initial_balance": initial}, headers=headers).json()
+    a = client.post("/accounts/", json={"account_name": "C", "account_type": "COURANT", "bank_id": b["bank_id"], "account_initial_balance": initial}, headers=headers).json()
     m = client.post("/transaction_methods/", json={"transmet_type": "CARTE", "account_id": a["account_id"]}, headers=headers).json()
     return m["transmet_id"]
 
@@ -138,7 +138,7 @@ def test_balances(client, alice):
     assert float(solde) == 830.0
 
 
-def test_by_category_trie_par_montant(client, alice):
+def test_by_category_trie_par_montant_decroissant(client, alice):
     tid = _setup(client, alice)
     now = datetime.now()
     loyer = client.post("/categories/", json={"category_name": "Logement", "category_color": "BROWN"}, headers=alice).json()["category_id"]
@@ -147,7 +147,7 @@ def test_by_category_trie_par_montant(client, alice):
     _tx(client, alice, tid, "Essence", "-80.00", now, category_id=transport)
     _tx(client, alice, tid, "Divers", "-200.00", now)
     data = client.get("/stats/by-category?period=all", headers=alice).json()
-    assert [float(c["total"]) for c in data] == [80.0, 200.0, 650.0]
+    assert [float(c["total"]) for c in data] == [650.0, 200.0, 80.0]
 
 
 def test_balance_over_time_renvoie_le_debut_de_periode(client, alice):
