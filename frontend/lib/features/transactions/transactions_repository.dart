@@ -15,6 +15,9 @@ class Transaction {
     final String? categoryColor;
     final int methodId;
     final String methodType;
+    final String? accountName;
+    final String? bankName;
+    final bool recurring;
     final List<Tag> tags;
 
     Transaction({
@@ -28,11 +31,17 @@ class Transaction {
         this.categoryColor,
         required this.methodId,
         required this.methodType,
+        this.accountName,
+        this.bankName,
+        required this.recurring,
         required this.tags,
     });
 
     factory Transaction.fromJson(Map<String, dynamic> json) {
         final category = json['category'] as Map<String, dynamic>?;
+        final method = json['method'] as Map<String, dynamic>;
+        final account = method['account'] as Map<String, dynamic>?;
+        final bank = account?['bank'] as Map<String, dynamic>?;
         return Transaction(
             id: json['transac_id'] as int,
             name: json['transac_name'] as String,
@@ -43,9 +52,18 @@ class Transaction {
             categoryName: category?['category_name'] as String?,
             categoryColor: category?['category_color'] as String?,
             methodId: json['transmet_id'] as int,
-            methodType: json['method']['transmet_type'] as String,
+            methodType: method['transmet_type'] as String,
+            accountName: account?['account_name'] as String?,
+            bankName: bank?['bank_name'] as String?,
+            recurring: json['rectrans_id'] != null,
             tags: (json['tags'] as List).map((e) => Tag.fromJson(e)).toList(),
         );
+    }
+
+    String get subtitle {
+        final label = methodTypeLabels[methodType] ?? methodType;
+        final where = bankName ?? accountName;
+        return where == null ? label : '$label · $where';
     }
 }
 

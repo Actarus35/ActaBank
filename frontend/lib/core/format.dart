@@ -11,8 +11,14 @@ String formatAmount(double value, {bool signed = false, bool rounded = false}) {
 
 String formatDate(DateTime d) => DateFormat('dd/MM/yyyy', 'fr_FR').format(d);
 
-String formatDayHeader(DateTime d) =>
-    DateFormat('EEEE d MMMM', 'fr_FR').format(d).toUpperCase();
+String formatDayHeader(DateTime d) {
+  final now = DateTime.now();
+  final day = DateTime(d.year, d.month, d.day);
+  if (day == DateTime(now.year, now.month, now.day)) return "AUJOURD'HUI";
+  if (day == DateTime(now.year, now.month, now.day - 1)) return 'HIER';
+  final pattern = d.year == now.year ? 'EEEE d MMMM' : 'EEEE d MMMM yyyy';
+  return DateFormat(pattern, 'fr_FR').format(d).toUpperCase();
+}
 
 String formatMonthYear(DateTime d) {
   final text = DateFormat('MMMM yyyy', 'fr_FR').format(d);
