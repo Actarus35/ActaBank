@@ -60,7 +60,7 @@ ActaBank-Vault/
 
 ## Frontmatter — valeurs possibles
 
-**Statut d'une étape** : `à-faire` | `en-cours` | `terminé` | `bloqué`
+**Statut d'une étape** : `à-faire` | `en-cours` | `terminé` | `bloqué` | `abandonné`
 
 **Statut d'apprentissage d'une techno** : `découverte` | `en-cours` | `maîtrisé`
 

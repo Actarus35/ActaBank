@@ -16,13 +16,12 @@ outil réel, destiné à être rendu public sur GitHub.
 
 ## Stack technique
 
-- **Langage** : Python
-- **API** : FastAPI (doc auto sur `/docs`)
-- **ORM** : SQLAlchemy
-- **Migrations** : Alembic
-- **Base** : SQLite aujourd'hui → PostgreSQL plus tard
-- **Sécurité (à venir)** : JWT + bcrypt
-- **Plus tard** : Apache Superset (BI) ou Power BI, WireGuard (accès distant), Docker, CI
+- **Backend** : Python, FastAPI (doc auto sur `/docs`), SQLAlchemy, Alembic
+- **Base** : PostgreSQL via Docker (SQLite en mémoire pour les tests)
+- **Sécurité** : JWT + bcrypt, données cloisonnées par utilisateur
+- **Frontend** : Flutter (Riverpod, dio, fl_chart), cible web pour commencer
+- **Déploiement** : image Docker sur GHCR, stacks Portainer (test et prod), accès WireGuard
+- **Plus tard** : CI, refresh tokens, cibles Android/bureau
 
 ## Architecture
 
@@ -32,7 +31,8 @@ outil réel, destiné à être rendu public sur GitHub.
   sur le code existant.
 - Repère rapide (indicatif, à vérifier dans le code) : `backend/` en couches —
   `models/` (ORM) · `schemas/` (Pydantic) · `crud/` (accès données) · `routes/` (endpoints) ·
-  `enums/` · `main.py` (assemblage).
+  `services/` (logique métier) · `enums/` · `main.py` (assemblage). `frontend/lib/` —
+  `core/` (config, HTTP, token) · `features/` (un dossier par fonctionnalité).
 
 ## Méthode de réponse
 

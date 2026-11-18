@@ -37,6 +37,15 @@ def modify_account(db: Session, account_id: int, user_id: int, account_update: A
     for key, value in update_data.items():
         setattr(db_account, key, value)
 
+    db.flush()
+    db.refresh(db_account)
+    archived = update_data.get("account_archived")
+    if archived is True:
+        for method in db_account.methods:
+            method.transmet_archived = True
+    elif archived is False and db_account.bank is not None:
+        db_account.bank.bank_archived = False
+
     db.commit()
     db.refresh(db_account)
     return db_account

@@ -1,13 +1,13 @@
 ---
 étape: 3
 titre: Logique métier
-statut: en-cours
+statut: terminé
 techno:
   - FastAPI
   - SQLAlchemy
   - Python
 début: 2026-05-15
-fin:
+fin: 2026-07-23
 tags:
   - roadmap
 ---
@@ -18,9 +18,9 @@ tags:
 Améliorer l'API pour qu'elle fonctionne correctement de manière durable.
 
 ## Tâches
-- [ ] Centraliser la logique métier
-- [ ] Gérer les erreurs proprement
-- [ ] Créer des tests unitaires
+- [X] Centraliser la logique métier
+- [X] Gérer les erreurs proprement
+- [X] Créer des tests unitaires
 
 ## Résultat attendu
 Des règles claires et fiables.

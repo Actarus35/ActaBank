@@ -40,8 +40,8 @@ def delete_transaction_method(transmet_id: int, db: Session = Depends(get_db), c
     transaction_method = crud.get_transaction_method(db, transmet_id, current_user.user_id)
     if not transaction_method:
         raise HTTPException(status_code=404, detail="Transaction method not found")
-    if transaction_method.transactions:
-        raise HTTPException(status_code=409, detail="Cette méthode est utilisée par des transactions et ne peut pas être supprimée")
+    if transaction_method.transactions or transaction_method.recurring_transactions:
+        raise HTTPException(status_code=409, detail="Cette méthode est utilisée par des transactions ou des récurrences et ne peut pas être supprimée")
     crud.delete_transaction_method(db, transmet_id, current_user.user_id)
     
 

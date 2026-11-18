@@ -19,6 +19,7 @@ backend/
 ├── schemas/       # schémas Pydantic (la forme du JSON de l'API)
 ├── crud/          # accès aux données, filtré par propriétaire
 ├── routes/        # endpoints HTTP, un fichier par ressource
+├── services/      # logique métier transverse (génération des récurrences)
 ├── enums/         # énumérations (AccountType, Color, Frequency, ...)
 ├── alembic/       # migrations de schéma
 ├── tests/         # suite pytest
@@ -76,6 +77,17 @@ Toutes les routes de ressources exigent un en-tête `Authorization: Bearer <toke
 Chaque donnée appartient à un utilisateur : personne ne peut lire, modifier ou référencer
 les données d'un autre.
 
+## Statistiques
+
+Routes d'agrégation pour le tableau de bord, toutes filtrées par utilisateur et acceptant
+`?period=month|3months|6months|all` :
+
+- `GET /stats/summary` — solde, revenus, dépenses
+- `GET /stats/by-category` — dépenses par catégorie
+      `?tag_id=…` restreint aux transactions portant ce tag
+- `GET /stats/balance-over-time` — évolution du solde
+- `GET /stats/by-name` — dépenses par libellé de transaction
+
 ## Tests
 
 ```bash
@@ -92,7 +104,9 @@ classDiagram
     Bank "1" o-- "*" Account : héberge
     Account "0..1" o-- "*" TransactionMethod : porte
     TransactionMethod "1" o-- "*" Transaction : règle
-    Label "0..1" o-- "*" Transaction : catégorise
+    Category "0..1" o-- "*" Transaction : catégorise
+    Tag "*" o-- "*" Transaction : étiquette
+    Tag "*" o-- "*" RecurringTransaction : étiquette
     RecurringTransaction "0..1" o-- "*" Transaction : cadence
 
     class User {
@@ -128,13 +142,18 @@ classDiagram
       +transac_amount: Decimal
       +transac_description?: str
       +transmet_id: int
-      +label_id?: int
+      +category_id?: int
       +rectrans_id?: int
     }
-    class Label {
-      +label_id: int
-      +label_name: str
-      +label_color: Color
+    class Category {
+      +category_id: int
+      +category_name: str
+      +category_color: Color
+    }
+    class Tag {
+      +tag_id: int
+      +tag_name: str
+      +tag_color: Color
     }
     class RecurringTransaction {
       +rectrans_id: int

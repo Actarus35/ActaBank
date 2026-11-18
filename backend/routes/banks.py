@@ -41,7 +41,7 @@ def delete_bank(bank_id: int, db: Session = Depends(get_db), current_user: User 
             status_code=409,
             detail="Cette banque est utilisée par des comptes et ne peut pas être supprimée",
         )
-    crud.delete_bank(db, bank_id)
+    crud.delete_bank(db, bank_id, current_user.user_id)
 
 
 @router.patch("/{bank_id}", response_model=schema.BankRead)

@@ -1,18 +1,21 @@
 from datetime import datetime
 from decimal import Decimal
+from dateutil.relativedelta import relativedelta
 
-from services.recurring import generate_due_transactions
-from models.recurring_transactions import RecurringTransaction
-from models.transactions import Transaction
-from crud import users, banks, accounts, transaction_methods
+from models.tags import Tag
+from enums.colors import Color
 from schemas.users import UserCreate
 from schemas.banks import BankCreate
-from schemas.accounts import AccountCreate
-from schemas.transaction_methods import TransactionMethodCreate
-from enums.colors import Color
-from enums.account_type import AccountType
-from enums.transaction_type import TransactionType
 from enums.frequency import Frequency
+from schemas.accounts import AccountCreate
+from enums.account_type import AccountType
+from models.transactions import Transaction
+from enums.transaction_type import TransactionType
+from services.recurring import generate_due_transactions
+from crud import users, banks, accounts, transaction_methods
+from models.recurring_transactions import RecurringTransaction
+from schemas.transaction_methods import TransactionMethodCreate
+
 
 def _prereqs(db):
     u = users.create_user(db, UserCreate(
@@ -25,7 +28,7 @@ def _prereqs(db):
         u.user_id)
     a = accounts.create_account(db, AccountCreate(
         account_name="Courant",
-        account_type=AccountType.COMPTE_COURANT,
+        account_type=AccountType.COURANT,
         bank_id=b.bank_id),
         u.user_id)
     m = transaction_methods.create_transaction_method(db, TransactionMethodCreate(
@@ -77,3 +80,54 @@ def test_date_de_fin(db_session):
     u, m = _prereqs(db_session)
     _rule(db_session, u.user_id, m.transmet_id, rectrans_end_date=datetime(2026, 2, 15))
     assert generate_due_transactions(db_session, u.user_id, now=datetime(2026, 6, 1)) == 2  # janvier + février
+
+
+def test_recopie_des_tags(db_session):
+    u, m = _prereqs(db_session)
+    tag = Tag(tag_name="Logement", user_id=u.user_id)
+    db_session.add(tag)
+    db_session.commit()
+    rule = _rule(db_session, u.user_id, m.transmet_id)
+    rule.tags = [tag]
+    db_session.commit()
+
+    generate_due_transactions(db_session, u.user_id, now=datetime(2026, 2, 15))
+
+    generees = db_session.query(Transaction).all()
+    assert len(generees) == 2
+    assert all([t.tag_name for t in tx.tags] == ["Logement"] for tx in generees)
+
+
+def test_methode_archivee_suspend_la_regle(db_session):
+    u, m = _prereqs(db_session)
+    _rule(db_session, u.user_id, m.transmet_id)
+    m.transmet_archived = True
+    db_session.commit()
+    assert generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15)) == 0
+
+
+def test_prochaine_echeance(db_session):
+    u, m = _prereqs(db_session)
+    rule = _rule(db_session, u.user_id, m.transmet_id)
+    assert rule.rectrans_next_date == datetime(2026, 1, 1)
+    generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15))
+    assert rule.rectrans_next_date == datetime(2026, 4, 1)
+
+
+def test_prochaine_echeance_apres_la_fin(db_session):
+    u, m = _prereqs(db_session)
+    rule = _rule(db_session, u.user_id, m.transmet_id, rectrans_end_date=datetime(2026, 2, 15))
+    generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15))
+    assert rule.rectrans_next_date is None
+
+
+def test_api_renvoie_la_prochaine_echeance(client, alice):
+    b = client.post("/banks/", json={"bank_name": "CIC", "bank_color": "RED"}, headers=alice).json()
+    a = client.post("/accounts/", json={"account_name": "C", "account_type": "COURANT", "bank_id": b["bank_id"]}, headers=alice).json()
+    m = client.post("/transaction_methods/", json={"transmet_type": "VIREMENT", "account_id": a["account_id"]}, headers=alice).json()
+    futur = (datetime.now().replace(microsecond=0) + relativedelta(months=2)).isoformat()
+    r = client.post("/recurring_transactions/", json={
+        "rectrans_name": "Assurance", "rectrans_amount": "-30.00", "rectrans_frequency": "YEARLY",
+        "rectrans_start_date": futur, "rectrans_transmet_id": m["transmet_id"],
+    }, headers=alice).json()
+    assert r["rectrans_next_date"] == futur

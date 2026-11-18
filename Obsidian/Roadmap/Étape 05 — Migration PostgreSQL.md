@@ -1,11 +1,15 @@
 ---
 étape: 5
-titre: "Migration PostgreSQL"
-statut: "à-faire"
-techno: [PostgreSQL, SQLAlchemy, SQLite]
-début: 
-fin: 
-tags: [roadmap]
+titre: Migration PostgreSQL
+statut: terminé
+techno: 
+    - PostgreSQL
+    - SQLAlchemy
+    - SQLite
+début: 2026-07-25
+fin: 2026-07-25
+tags: 
+    - roadmap
 ---
 
 # Étape 05 — Migration PostgreSQL
@@ -14,9 +18,9 @@ tags: [roadmap]
 Préparer la BI sérieuse avec une base de données plus robuste.
 
 ## Tâches
-- [ ] Installer PostgreSQL
-- [ ] Migrer SQLite → PostgreSQL
-- [ ] Adapter SQLAlchemy
+- [X] Installer PostgreSQL
+- [X] Migrer SQLite → PostgreSQL
+- [X] Adapter SQLAlchemy
 
 ## Résultat attendu
 Même API, base de données plus robuste.

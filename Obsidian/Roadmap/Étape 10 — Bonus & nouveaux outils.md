@@ -1,11 +1,14 @@
 ---
 étape: 10
-titre: "Bonus & nouveaux outils"
-statut: "à-faire"
-techno: [Docker, GitHub Actions]
-début: 
+titre: Bonus & nouveaux outils
+statut: en-cours
+techno: 
+    - Docker
+    - GitHub Actions
+début: 2026-07-31
 fin: 
-tags: [roadmap]
+tags:
+    - roadmap
 ---
 
 # Étape 10 — Bonus & nouveaux outils
@@ -14,7 +17,7 @@ tags: [roadmap]
 Apprentissage de nouveaux outils en fin de projet.
 
 ## Tâches
-- [ ] Docker
+- [X] Docker
 - [ ] Tests unitaires complets
 - [ ] CI avec GitHub Actions
 - [ ] Monitoring

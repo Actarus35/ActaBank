@@ -1,11 +1,16 @@
 ---
 étape: 7
-titre: "Frontend"
-statut: "à-faire"
-techno: []
-début: 
+titre: Frontend
+statut: en-cours
+techno: 
+    - Flutter
+    - Riverpod
+    - dio
+    - fl_chart
+début: 2026-08-06
 fin: 
-tags: [roadmap]
+tags: 
+    - roadmap
 ---
 
 # Étape 07 — Frontend
@@ -14,14 +19,22 @@ tags: [roadmap]
 Une interface simple mais utilisable.
 
 ## Tâches
-- [ ] Choisir l'outil frontend (Flutter / PWA / React Native / hybride)
-- [ ] Créer l'interface utilisateur
+- [x] Choisir l'outil frontend → Flutter ([[Décision - Choix du framework frontend]])
+- [x] Authentification (connexion, token, déconnexion automatique sur 401)
+- [x] Tableau de bord (solde, répartition par catégorie, évolution du solde, par libellé)
+- [x] Transactions : liste et ajout
+- [ ] Transactions : modification et suppression
+- [ ] Catégories et tags (voir [[Décision - Catégories et tags]])
+- [ ] Écran Paramètres (banques, comptes, moyens de paiement, catégories, tags, récurrences)
+- [ ] Écran d'inscription
+- [ ] Adresse de l'API configurable (local / test / prod)
 
 ## Résultat attendu
 Possibilité d'utiliser l'application "pour de vrai".
 
 ## Technologies impliquées
-> À définir — voir [[Ressources/Décisions/Choix du framework frontend]]
+- Flutter (cible web pour commencer)
+- Riverpod (gestion d'état), dio (HTTP), fl_chart (graphiques)
 
 ## Notes & réflexions
 

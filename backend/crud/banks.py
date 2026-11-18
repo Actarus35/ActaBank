@@ -37,6 +37,12 @@ def modify_bank(db: Session, bank_id: int, user_id: int, bank_update: BankUpdate
     for key, value in update_data.items():
         setattr(db_bank, key, value)
 
+    if update_data.get("bank_archived") is True:
+        for account in db_bank.accounts:
+            account.account_archived = True
+            for method in account.methods:
+                method.transmet_archived = True
+
     db.commit()
     db.refresh(db_bank)
     return db_bank
