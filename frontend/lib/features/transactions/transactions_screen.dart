@@ -8,7 +8,7 @@ import '../../core/theme/app_palette.dart';
 import '../../core/widgets/pill_segmented.dart';
 import '../../core/widgets/tone_chip.dart';
 import '../settings/references_repository.dart';
-import 'transaction_form_screen.dart';
+import 'transaction_panel.dart';
 import 'transactions_repository.dart';
 
 enum _Filter { all, expenses, income }
@@ -60,6 +60,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   int _category = _all;
   int _tag = _all;
   int _account = _all;
+  bool _panelOpen = false;
+  Transaction? _editing;
+  bool _showFilters = false;
+  bool get _menuFiltersActive => _category != _all || _tag != _all || _account != _all;
+
+
+  void _openPanel([Transaction? t]) => setState(() {
+    _panelOpen = true;
+    _editing = t;
+  });
+
+  void _closePanel() => setState(() {
+    _panelOpen = false;
+    _editing = null;
+  });
 
   @override
   void dispose() {
@@ -124,21 +139,45 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       onChanged: (f) => setState(() => _filter = f),
     );
 
+    final addButton = FilledButton.icon(
+      onPressed: _panelOpen && _editing == null ? null : () => _openPanel(),
+      icon: const Icon(Icons.add, size: 18),
+      label: const Text('Transaction'),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 40),
+        shape: const StadiumBorder(),
+      ),
+    );
+
+    final accent = Theme.of(context).colorScheme.primary;
+    final showMenus = wide || _showFilters || _search.text.trim().isNotEmpty || _menuFiltersActive;
+
+    final suffix = <Widget>[
+      if (_search.text.isNotEmpty)
+        IconButton(
+          tooltip: 'Effacer',
+          icon: const Icon(Icons.close, size: 18),
+          onPressed: () => setState(_search.clear),
+        ),
+      if (!wide)
+        IconButton(
+          tooltip: 'Filtres',
+          icon: Icon(Icons.tune, size: 18, color: showMenus ? accent : null),
+          onPressed: () => setState(() => _showFilters = !_showFilters),
+        ),
+    ];
+
     final search = TextField(
       controller: _search,
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
-        hintText: 'Rechercher par nom…',
+        hintText: wide ? 'Rechercher par nom…' : 'Rechercher…',
         isDense: true,
         fillColor: palette.card,
         prefixIcon: const Icon(Icons.search, size: 20),
-        suffixIcon: _search.text.isEmpty
+        suffixIcon: suffix.isEmpty
           ? null
-          : IconButton(
-              tooltip: 'Effacer',
-              icon: const Icon(Icons.close, size: 18),
-              onPressed: () => setState(_search.clear),
-            ),
+          : Row(mainAxisSize: MainAxisSize.min, children: suffix),
       ),
     );
 
@@ -173,84 +212,127 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       ),
     ];
 
-    final filters = wide
-      ? Row(
-          children: [
-            Expanded(child: search),
-            for (final m in menus) ...[const SizedBox(width: 10), m],
+    final menusRow = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final (i, m) in menus.indexed) ...[
+            if (i > 0) const SizedBox(width: 8),
+            m,
           ],
-        )
-      : Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            search,
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final (i, m) in menus.indexed) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    m,
-                  ],
-                ],
-              ),
-            ),
+        ],
+      ),
+    );
+
+    final header = wide
+      ? <Widget>[
+          Row(children: [Expanded(child: title), addButton, const SizedBox(width: 12), typeFilter]),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: search),
+              for (final m in menus) ...[const SizedBox(width: 10), m],
+            ],
+          ),
+        ]
+      : <Widget>[
+          Row(children: [title, const SizedBox(width: 12), Expanded(child: search)]),
+          if (!_panelOpen) ...[
+            const SizedBox(height: 10),
+            typeFilter,
+            if (showMenus) ...[const SizedBox(height: 8), menusRow],
           ],
-        );
+        ];
+
+    final listColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...header,
+        const SizedBox(height: 12),
+        Expanded(
+          child: transactions.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Erreur : $e')),
+            data: (all) {
+              final rows = _groupByDay(all.where(_keep).toList());
+              if (rows.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _hasFilters ? 'Aucune transaction ne correspond' : _emptyText,
+                        style: TextStyle(color: palette.muted),
+                      ),
+                      if (_hasFilters)
+                        TextButton(onPressed: _clearFilters, child: const Text('Effacer les filtres')),
+                    ],
+                  ),
+                );
+              }
+              return Card(
+                margin: EdgeInsets.zero,
+                clipBehavior: Clip.antiAlias,
+                child: ListView.builder(
+                  padding: EdgeInsets.only(bottom: wide || _panelOpen ? 0 : 80),
+                  itemCount: rows.length,
+                  itemBuilder: (context, i) => switch (rows[i]) {
+                    _HeaderRow(:final day, :final total) => _DayHeader(day: day, total: total),
+                    _TransactionRow(:final transaction) => _TransactionTile(
+                      transaction: transaction,
+                      selected: _editing?.id == transaction.id,
+                      onTap: () => _openPanel(transaction),
+                    ),
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+
+    final padding = EdgeInsets.fromLTRB(wide ? 24 : 16, wide ? 20 : 12, wide ? 24 : 16, wide ? 20 : 12);
+    final panel = TransactionPanel(
+      key: ValueKey(_editing?.id),
+      transaction: _editing,
+      onClose: _closePanel,
+    );
+
+    if (wide) {
+      return Scaffold(
+        body: Padding(
+          padding: padding,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: listColumn),
+              if (_panelOpen) ...[
+                const SizedBox(width: 18),
+                SizedBox(
+                  width: 400,
+                  child: Card(margin: EdgeInsets.zero, clipBehavior: Clip.antiAlias, child: panel),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.fromLTRB(wide ? 24 : 16, wide ? 20 : 12, wide ? 24 : 16, wide ? 20 : 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      floatingActionButton: _panelOpen
+        ? null
+        : FloatingActionButton(
+            tooltip: 'Nouvelle transaction',
+            onPressed: () => _openPanel(),
+            child: const Icon(Icons.add),
+          ),
+      body: LayoutBuilder(
+        builder: (context, c) => Column(
           children: [
-            if (wide)
-              Row(children: [Expanded(child: title), typeFilter])
-            else ...[
-              title,
-              const SizedBox(height: 10),
-              typeFilter,
-            ],
-            const SizedBox(height: 12),
-            filters,
-            const SizedBox(height: 14),
-            Expanded(
-              child: transactions.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Erreur : $e')),
-                data: (all) {
-                  final rows = _groupByDay(all.where(_keep).toList());
-                  if (rows.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _hasFilters ? 'Aucune transaction ne correspond' : _emptyText,
-                            style: TextStyle(color: palette.muted),
-                          ),
-                          if (_hasFilters)
-                            TextButton(onPressed: _clearFilters, child: const Text('Effacer les filtres')),
-                        ],
-                      ),
-                    );
-                  }
-                  return Card(
-                    margin: EdgeInsets.zero,
-                    clipBehavior: Clip.antiAlias,
-                    child: ListView.builder(
-                      padding: EdgeInsets.only(bottom: wide ? 0 : 88),
-                      itemCount: rows.length,
-                      itemBuilder: (context, i) => switch (rows[i]) {
-                        _HeaderRow(:final day, :final total) => _DayHeader(day: day, total: total),
-                        _TransactionRow(:final transaction) => _TransactionTile(transaction: transaction),
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
+            Expanded(child: Padding(padding: padding, child: listColumn)),
+            if (_panelOpen) _BottomPanel(height: c.maxHeight * 0.65, child: panel),
           ],
         ),
       ),
@@ -346,8 +428,10 @@ class _DayHeader extends StatelessWidget {
 
 class _TransactionTile extends StatelessWidget {
   final Transaction transaction;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _TransactionTile({required this.transaction});
+  const _TransactionTile({required this.transaction, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -368,12 +452,13 @@ class _TransactionTile extends StatelessWidget {
     );
 
     return InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => TransactionFormScreen(transaction: t)),
-      ),
+      onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: wide ? 18 : 16, vertical: 12),
-        decoration: BoxDecoration(border: Border(top: BorderSide(color: palette.border))),
+        decoration: BoxDecoration(
+          color: selected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : null,
+          border: Border(top: BorderSide(color: palette.border)),
+        ),
         child: Row(
           children: [
             Container(
@@ -474,6 +559,42 @@ class _RecurringBadge extends StatelessWidget {
         child: Text(
           '↻',
           style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.muted),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomPanel extends StatelessWidget {
+  final double height;
+  final Widget child;
+
+  const _BottomPanel({required this.height, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Material(
+      color: palette.card,
+      elevation: 12,
+      shadowColor: Colors.black54,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: height,
+        child: Column(
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(top: 10, bottom: 2),
+              decoration: BoxDecoration(
+                color: palette.muted.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Expanded(child: child),
+          ],
         ),
       ),
     );

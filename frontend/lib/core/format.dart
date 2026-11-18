@@ -24,3 +24,5 @@ String formatMonthYear(DateTime d) {
   final text = DateFormat('MMMM yyyy', 'fr_FR').format(d);
   return text[0].toUpperCase() + text.substring(1);
 }
+
+String formatLongDate(DateTime d) => DateFormat('d MMMM yyyy', 'fr_FR').format(d);

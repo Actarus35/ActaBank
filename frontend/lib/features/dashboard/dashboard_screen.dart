@@ -10,6 +10,7 @@ import '../../core/theme/app_palette.dart';
 import '../../core/widgets/pill_segmented.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/tone_chip.dart';
+import '../../core/widgets/tag_chip.dart';
 import '../auth/auth_repository.dart';
 import '../auth/user_avatar.dart';
 import '../settings/references_repository.dart';
@@ -594,8 +595,9 @@ class _TagFilter extends ConsumerWidget {
             runSpacing: 7,
             children: [
               for (final t in tags)
-                _TagChip(
-                  tag: t,
+                TagChip(
+                  label: t.name,
+                  colorName: t.color,
                   selected: selected == t.id,
                   onTap: () => ref.read(selectedTagProvider.notifier).state =
                     selected == t.id ? null : t.id,
@@ -603,57 +605,6 @@ class _TagFilter extends ConsumerWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _TagChip extends StatelessWidget {
-  final Tag tag;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _TagChip({required this.tag, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.palette;
-    final tone = labelTone(tag.color, Theme.of(context).brightness);
-    final shape = StadiumBorder(
-      side: BorderSide(
-        color: selected ? tone.solid : tone.solid.withValues(alpha: 0.45),
-        width: 1.5,
-      ),
-    );
-
-    return Material(
-      color: selected ? tone.background : Colors.transparent,
-      shape: shape,
-      child: InkWell(
-        customBorder: shape,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                selected ? Icons.check_rounded : Icons.sell_outlined,
-                size: 13,
-                color: tone.solid,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                tag.name,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? tone.text : palette.ink,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

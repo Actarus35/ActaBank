@@ -8,7 +8,6 @@ import '../../core/widgets/pill_segmented.dart';
 import '../auth/user_avatar.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../settings/settings_screen.dart';
-import '../transactions/transaction_form_screen.dart';
 import '../transactions/transactions_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -29,19 +28,13 @@ class _HomeShellState extends State<HomeShell> {
 
   void _select(int index) => setState(() => _index = index);
 
-  void _newTransaction() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TransactionFormScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isWide(context)) {
       return Scaffold(
         body: Column(
           children: [
-            _TopBar(index: _index, onSelect: _select, onNewTransaction: _newTransaction),
+            _TopBar(index: _index, onSelect: _select),
             Expanded(
               child: Align(
                 alignment: Alignment.topCenter,
@@ -58,11 +51,6 @@ class _HomeShellState extends State<HomeShell> {
 
     return Scaffold(
       body: SafeArea(bottom: false, child: _screens[_index]),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Nouvelle transaction',
-        onPressed: _newTransaction,
-        child: const Icon(Icons.add),
-      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: _select,
@@ -91,12 +79,10 @@ class _HomeShellState extends State<HomeShell> {
 class _TopBar extends ConsumerWidget {
   final int index;
   final ValueChanged<int> onSelect;
-  final VoidCallback onNewTransaction;
 
   const _TopBar({
     required this.index,
     required this.onSelect,
-    required this.onNewTransaction,
   });
 
   @override
@@ -148,15 +134,6 @@ class _TopBar extends ConsumerWidget {
             ],
             selected: mode,
             onChanged: ref.read(themeControllerProvider.notifier).setMode,
-          ),
-          const SizedBox(width: 10),
-          FilledButton(
-            onPressed: onNewTransaction,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 38),
-              shape: const StadiumBorder(),
-            ),
-            child: const Text('+ Transaction'),
           ),
           const SizedBox(width: 6),
           IconButton(
