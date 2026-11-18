@@ -162,6 +162,9 @@ A faire quand tout le reste fonctionne avec un code clean :
 - sauvegardes auto
 - logs
 - tests (100% de coverage)
+- un emoji par catégorie, affiché dans la tuile de chaque transaction (à la place de l'initiale)
+- créer une catégorie ou un tag directement depuis le formulaire de transaction
+- pagination et recherche côté serveur des transactions
 - transferts entre ses propres comptes (« transaction interne », ni dépense ni revenu)
 - à plus long terme : transferts entre utilisateurs de l'application et partage de dépenses
   (type Tricount)

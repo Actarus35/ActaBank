@@ -15,6 +15,7 @@ class Transaction {
     final String? categoryColor;
     final int methodId;
     final String methodType;
+    final int? accountId;
     final String? accountName;
     final String? bankName;
     final bool recurring;
@@ -31,6 +32,7 @@ class Transaction {
         this.categoryColor,
         required this.methodId,
         required this.methodType,
+        this.accountId,
         this.accountName,
         this.bankName,
         required this.recurring,
@@ -53,6 +55,7 @@ class Transaction {
             categoryColor: category?['category_color'] as String?,
             methodId: json['transmet_id'] as int,
             methodType: method['transmet_type'] as String,
+            accountId: account?['account_id'] as int?,
             accountName: account?['account_name'] as String?,
             bankName: bank?['bank_name'] as String?,
             recurring: json['rectrans_id'] != null,
