@@ -25,6 +25,7 @@ class RecurringTransactionCreate(RecurringTransactionBase, CreateModel):
 class RecurringTransactionRead(RecurringTransactionBase):
     rectrans_id: int
     tags: list[TagRead]
+    rectrans_next_date: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 

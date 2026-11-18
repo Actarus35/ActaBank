@@ -9,6 +9,11 @@ String formatAmount(double value, {bool signed = false, bool rounded = false}) {
   return value > 0 ? '+$text' : '−$text';
 }
 
+String formatShortDate(DateTime d) => DateFormat(
+  d.year == DateTime.now().year ? 'd MMM' : 'd MMM yyyy',
+  'fr_FR',
+).format(d);
+
 String formatDate(DateTime d) => DateFormat('dd/MM/yyyy', 'fr_FR').format(d);
 
 String formatDayHeader(DateTime d) {

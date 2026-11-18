@@ -25,5 +25,16 @@ class RecurringTransaction(Base):
     transaction = relationship("Transaction", back_populates="recurring_transaction", passive_deletes=True)
     tags = relationship("Tag", secondary=recurring_transaction_tags, back_populates="recurring_transactions", passive_deletes=True)
 
+    @property
+    def rectrans_next_date(self) -> datetime | None:
+        """Prochaine occurrence à générer, ou None si la règle est terminée."""
+        if self.rectrans_last_generated is None:
+            next_date = self.rectrans_start_date
+        else:
+            next_date = self.rectrans_last_generated + self.rectrans_frequency.step
+        if self.rectrans_end_date is not None and next_date > self.rectrans_end_date:
+            return None
+        return next_date
+
     def __repr__(self) -> str:
         return f"RecurringTransaction(id={self.rectrans_id!r}, name={self.rectrans_name!r}, amount={self.rectrans_amount!r}, frequency={self.rectrans_frequency!r})"

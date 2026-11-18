@@ -8,8 +8,9 @@ import 'recurring_repository.dart';
 
 class RecurringFormScreen extends ConsumerStatefulWidget {
   final RecurringTransaction? rule;
+  final bool initialExpense;
 
-  const RecurringFormScreen({super.key, this.rule});
+  const RecurringFormScreen({super.key, this.rule, this.initialExpense = true});
 
   @override
   ConsumerState<RecurringFormScreen> createState() => _RecurringFormScreenState();
@@ -33,6 +34,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
   @override
   void initState() {
     super.initState();
+    _isExpense = widget.initialExpense;
     final r = widget.rule;
     if (r != null) {
       _name.text = r.name;

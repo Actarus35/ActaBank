@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from dateutil.relativedelta import relativedelta
 
 from models.tags import Tag
 from enums.colors import Color
@@ -103,3 +104,30 @@ def test_methode_archivee_suspend_la_regle(db_session):
     m.transmet_archived = True
     db_session.commit()
     assert generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15)) == 0
+
+
+def test_prochaine_echeance(db_session):
+    u, m = _prereqs(db_session)
+    rule = _rule(db_session, u.user_id, m.transmet_id)
+    assert rule.rectrans_next_date == datetime(2026, 1, 1)
+    generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15))
+    assert rule.rectrans_next_date == datetime(2026, 4, 1)
+
+
+def test_prochaine_echeance_apres_la_fin(db_session):
+    u, m = _prereqs(db_session)
+    rule = _rule(db_session, u.user_id, m.transmet_id, rectrans_end_date=datetime(2026, 2, 15))
+    generate_due_transactions(db_session, u.user_id, now=datetime(2026, 3, 15))
+    assert rule.rectrans_next_date is None
+
+
+def test_api_renvoie_la_prochaine_echeance(client, alice):
+    b = client.post("/banks/", json={"bank_name": "CIC", "bank_color": "RED"}, headers=alice).json()
+    a = client.post("/accounts/", json={"account_name": "C", "account_type": "COURANT", "bank_id": b["bank_id"]}, headers=alice).json()
+    m = client.post("/transaction_methods/", json={"transmet_type": "VIREMENT", "account_id": a["account_id"]}, headers=alice).json()
+    futur = (datetime.now().replace(microsecond=0) + relativedelta(months=2)).isoformat()
+    r = client.post("/recurring_transactions/", json={
+        "rectrans_name": "Assurance", "rectrans_amount": "-30.00", "rectrans_frequency": "YEARLY",
+        "rectrans_start_date": futur, "rectrans_transmet_id": m["transmet_id"],
+    }, headers=alice).json()
+    assert r["rectrans_next_date"] == futur

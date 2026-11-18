@@ -1,23 +1,10 @@
 from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
 from models.recurring_transactions import RecurringTransaction
 from models.transaction_methods import TransactionMethod
 from models.transactions import Transaction
-
-
-STEP = {
-    "DAILY": relativedelta(days=1),
-    "WEEKLY": relativedelta(weeks=1),
-    "MONTHLY": relativedelta(months=1),
-    "YEARLY": relativedelta(years=1)
-}
-
-
-def _next(date: datetime, frequency) -> datetime:
-    return date + STEP[frequency.value]
 
 
 def generate_due_transactions(db: Session, user_id: int, now: datetime | None = None) -> int:
@@ -33,12 +20,8 @@ def generate_due_transactions(db: Session, user_id: int, now: datetime | None = 
     created = 0
 
     for rule in rules:
-        if rule.rectrans_last_generated is None:
-            occurrence = rule.rectrans_start_date
-        else:
-            occurrence = _next(rule.rectrans_last_generated, rule.rectrans_frequency)
-
-        while occurrence <= now and (rule.rectrans_end_date is None or occurrence <= rule.rectrans_end_date):
+        occurrence = rule.rectrans_next_date
+        while occurrence is not None and occurrence <= now:
             db.add(Transaction(
                 transac_name=rule.rectrans_name,
                 transac_date=occurrence,
@@ -47,10 +30,10 @@ def generate_due_transactions(db: Session, user_id: int, now: datetime | None = 
                 category_id=rule.rectrans_category_id,
                 rectrans_id=rule.rectrans_id,
                 tags=list(rule.tags),
-                user_id=rule.user_id,    
+                user_id=rule.user_id,
             ))
             rule.rectrans_last_generated = occurrence
-            occurrence = _next(occurrence, rule.rectrans_frequency)
+            occurrence = rule.rectrans_next_date
             created += 1
 
     db.commit()

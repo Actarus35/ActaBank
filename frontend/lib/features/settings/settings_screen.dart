@@ -7,7 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/pill_segmented.dart';
 import '../../core/widgets/section_card.dart';
-import '../recurring/recurring_screen.dart';
+import '../recurring/recurring_card.dart';
 import 'banks_card.dart';
 import 'labels_card.dart';
 import 'methods_card.dart';
@@ -27,7 +27,7 @@ class SettingsScreen extends StatelessWidget {
     final wide = isWide(context);
     final palette = context.palette;
     const left = <Widget>[_AppearanceCard(), BanksCard(), MethodsCard()];
-    const right = <Widget>[CategoriesCard(), TagsCard(), _OtherSettingsCard()];
+    const right = <Widget>[CategoriesCard(), TagsCard(), RecurringCard()];
 
     return Scaffold(
       body: ListView(
@@ -57,31 +57,6 @@ class SettingsScreen extends StatelessWidget {
             )
           else
             ..._spaced([...left, ...right]),
-        ],
-      ),
-    );
-  }
-}
-
-/// Temporaire : liens vers les anciens écrans, remplacés en R6b et R6c.
-class _OtherSettingsCard extends StatelessWidget {
-  const _OtherSettingsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    Widget link(IconData icon, String title, Widget screen) => ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen)),
-    );
-
-    return SectionCard(
-      title: 'Autres réglages',
-      child: Column(
-        children: [
-          link(Icons.repeat, 'Paiements récurrents', const RecurringScreen()),
         ],
       ),
     );

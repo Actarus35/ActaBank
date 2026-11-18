@@ -11,12 +11,20 @@ const frequencyLabels = {
   'YEARLY': 'Tous les ans',
 };
 
+const frequencyShortLabels = {
+  'DAILY': 'Quotidien',
+  'WEEKLY': 'Hebdo',
+  'MONTHLY': 'Mensuel',
+  'YEARLY': 'Annuel',
+};
+
 class RecurringTransaction {
   final int id;
   final String name;
   final double amount;
   final String frequency;
   final DateTime startDate;
+  final DateTime? nextDate;
   final DateTime? endDate;
   final int methodId;
   final int? categoryId;
@@ -28,6 +36,7 @@ class RecurringTransaction {
     required this.amount,
     required this.frequency,
     required this.startDate,
+    this.nextDate,
     this.endDate,
     required this.methodId,
     this.categoryId,
@@ -42,6 +51,9 @@ class RecurringTransaction {
       amount: double.parse(json['rectrans_amount'].toString()),
       frequency: json['rectrans_frequency'] as String,
       startDate: DateTime.parse(json['rectrans_start_date'] as String),
+      nextDate: json['rectrans_next_date'] == null
+        ? null
+        : DateTime.parse(json['rectrans_next_date'] as String),
       endDate: end == null ? null : DateTime.parse(end),
       methodId: json['rectrans_transmet_id'] as int,
       categoryId: json['rectrans_category_id'] as int?,
