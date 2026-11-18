@@ -30,5 +30,29 @@ services:
       - "${API_PORT}:8000"
     command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
 
+  backup:
+    image: postgres:17
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ${BACKUP_DIR}:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        chmod 700 /backups
+        while true; do
+          pg_dump -Fc -f /backups/actabank_$$(date +%F_%H%M).dump && echo "Sauvegarde OK"
+          find /backups -name '*.dump' -mtime +$$BACKUP_KEEP_DAYS -delete
+          sleep 86400
+        done
+
 volumes:
   db_data:
