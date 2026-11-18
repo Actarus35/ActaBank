@@ -9,9 +9,8 @@ import '../../core/widgets/pill_segmented.dart';
 import '../../core/widgets/section_card.dart';
 import '../recurring/recurring_screen.dart';
 import 'banks_card.dart';
-import 'categories_screen.dart';
-import 'methods_screen.dart';
-import 'tags_screen.dart';
+import 'labels_card.dart';
+import 'methods_card.dart';
 
 List<Widget> _spaced(List<Widget> cards) => [
   for (final (i, c) in cards.indexed) ...[
@@ -27,8 +26,8 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = isWide(context);
     final palette = context.palette;
-    const left = <Widget>[_AppearanceCard(), BanksCard()];
-    const right = <Widget>[_OtherSettingsCard()];
+    const left = <Widget>[_AppearanceCard(), BanksCard(), MethodsCard()];
+    const right = <Widget>[CategoriesCard(), TagsCard(), _OtherSettingsCard()];
 
     return Scaffold(
       body: ListView(
@@ -82,9 +81,6 @@ class _OtherSettingsCard extends StatelessWidget {
       title: 'Autres réglages',
       child: Column(
         children: [
-          link(Icons.category_outlined, 'Catégories', const CategoriesScreen()),
-          link(Icons.sell_outlined, 'Tags', const TagsScreen()),
-          link(Icons.credit_card, 'Moyens de paiement', const MethodsScreen()),
           link(Icons.repeat, 'Paiements récurrents', const RecurringScreen()),
         ],
       ),

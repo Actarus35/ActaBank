@@ -67,11 +67,15 @@ class _NameColorDialogState extends State<_NameColorDialog> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final c in colorNames) _ColorDot(
-                color: colorFromName(c),
-                selected: _color == c,
-                onTap: () => setState(() => _color = c),
-              ),
+              for (final c in colorNames)
+                Tooltip(
+                  message: colorLabels[c]!,
+                  child: _ColorDot(
+                    color: colorFromName(c),
+                    selected: _color == c,
+                    onTap: () => setState(() => _color = c),
+                  ),
+                ),
             ],
           ),
         ],

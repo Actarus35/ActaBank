@@ -6,6 +6,7 @@ import '../dashboard/stats_repository.dart';
 import 'accounts_form_screen.dart';
 import 'name_color_dialog.dart';
 import 'references_repository.dart';
+import 'method_form_screen.dart';
 
 void showError(BuildContext context, String message) {
   if (!context.mounted) return;
@@ -113,6 +114,38 @@ Future<void> toggleAccountArchived(BuildContext context, WidgetRef ref, Account 
   try {
     await ref.read(referencesRepositoryProvider).setAccountArchived(account.id, !account.archived);
     refreshBanking(ref);
+  } on DioException {
+    if (context.mounted) showError(context, "Impossible de modifier l'archivage");
+  }
+}
+
+Future<void> openMethodForm(BuildContext context, WidgetRef ref, {TransactionMethod? method}) async {
+  await Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => MethodFormScreen(method: method)),
+  );
+  if (context.mounted) ref.invalidate(transactionMethodsProvider);
+}
+
+Future<void> deleteMethod(BuildContext context, WidgetRef ref, TransactionMethod method) async {
+  if (!await confirmDelete(context, name: method.displayName) || !context.mounted) return;
+  try {
+    await ref.read(referencesRepositoryProvider).deleteMethod(method.id);
+    ref.invalidate(transactionMethodsProvider);
+  } on DioException catch (e) {
+    if (!context.mounted) return;
+    showError(
+      context,
+      e.response?.statusCode == 409
+        ? 'Ce moyen de paiement est encore utilisé : archive-le plutôt que de le supprimer'
+        : 'Impossible de supprimer le moyen de paiement',
+    );
+  }
+}
+
+Future<void> toggleMethodArchived(BuildContext context, WidgetRef ref, TransactionMethod method) async {
+  try {
+    await ref.read(referencesRepositoryProvider).setMethodArchived(method.id, !method.archived);
+    ref.invalidate(transactionMethodsProvider);
   } on DioException {
     if (context.mounted) showError(context, "Impossible de modifier l'archivage");
   }

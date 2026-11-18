@@ -9,6 +9,20 @@ const colorNames = [
   'PINK', 'PURPLE', 'RED', 'WHITE', 'YELLOW',
 ];
 
+const colorLabels = {
+  'BLACK': 'Noir',
+  'BLUE': 'Bleu',
+  'BROWN': 'Marron',
+  'GRAY': 'Gris',
+  'GREEN': 'Vert',
+  'ORANGE': 'Orange',
+  'PINK': 'Rose',
+  'PURPLE': 'Violet',
+  'RED': 'Rouge',
+  'WHITE': 'Blanc',
+  'YELLOW': 'Jaune',
+};
+
 class LabelTone {
   final Color solid;
   final Color background;
