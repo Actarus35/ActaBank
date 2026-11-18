@@ -6,6 +6,8 @@ import '../../core/colors.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/widgets/tag_chip.dart';
+import '../../core/widgets/pill_segmented.dart';
+import '../recurring/recurring_repository.dart';
 import '../settings/references_repository.dart';
 import 'transactions_repository.dart';
 
@@ -33,6 +35,20 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
   bool _saving = false;
   String? _error;
   bool _showDescription = false;
+  bool _recurring = false;
+  String _frequency = 'MONTHLY';
+
+  String get _recurringHint {
+    final every = switch (_frequency) {
+      'WEEKLY' => 'chaque semaine',
+      'YEARLY' => 'chaque année',
+      _ => 'chaque mois',
+    };
+    final start = formatLongDate(_date);
+    return _date.isAfter(DateTime.now())
+      ? 'Créée $every à partir du $start.'
+      : 'Créée $every depuis le $start, occurrences déjà passées comprises.';
+  }
 
   @override
   void initState() {
@@ -77,16 +93,30 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
     final description = _description.text.trim();
 
     try {
-      await ref.read(transactionsRepositoryProvider).save(
-        id: widget.transaction?.id,
-        name: _name.text.trim(),
-        date: _date,
-        amount: _isExpense ? -value : value,
-        description: description.isEmpty ? null : description,
-        methodId: _methodId!,
-        categoryId: _categoryId,
-        tagIds: _tagIds.toList(),
-      );
+      final amount = _isExpense ? -value : value;
+      if (_recurring) {
+        await ref.read(recurringRepositoryProvider).save(
+          name: _name.text.trim(),
+          amount: amount,
+          frequency: _frequency,
+          startDate: _date,
+          methodId: _methodId!,
+          categoryId: _categoryId,
+          tagIds: _tagIds.toList(),
+        );
+        ref.invalidate(recurringProvider);
+      } else {
+        await ref.read(transactionsRepositoryProvider).save(
+          id: widget.transaction?.id,
+          name: _name.text.trim(),
+          date: _date,
+          amount: amount,
+          description: description.isEmpty ? null : description,
+          methodId: _methodId!,
+          categoryId: _categoryId,
+          tagIds: _tagIds.toList(),
+        );
+      }
       ref.invalidate(transactionsProvider);
       if (mounted) widget.onClose();
     } on DioException {
@@ -286,23 +316,53 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
             onChanged: (v) => setState(() => _methodId = v),
             validator: (v) => v == null ? 'Obligatoire' : null,
           ),
-          gap,
-          if (tight && !_showDescription)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _showDescription = true),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Ajouter une description'),
-              ),
-            )
-          else ...[
-            const _FieldLabel('Description (facultatif)'),
-            TextFormField(
-              controller: _description,
-              minLines: 1,
-              maxLines: tight ? 2 : 3,
+          if (!editing) ...[
+            gap,
+            _RecurringToggle(
+              value: _recurring,
+              onChanged: (v) => setState(() => _recurring = v),
             ),
+            if (_recurring) ...[
+              SizedBox(height: tight ? 6 : 8),
+              PillSegmented<String>(
+                options: const [
+                  ('WEEKLY', 'Hebdo'),
+                  ('MONTHLY', 'Mensuel'),
+                  ('YEARLY', 'Annuel'),
+                ],
+                selected: _frequency,
+                expand: true,
+                onChanged: (f) => setState(() => _frequency = f),
+              ),
+              const SizedBox(height: 6),
+              Text(_recurringHint, style: TextStyle(fontSize: 11.5, color: palette.muted)),
+            ],
+          ] else if (widget.transaction!.recurring) ...[
+            gap,
+            Text(
+              '↻ Générée par un paiement récurrent : la modifier ne change que cette occurrence.',
+              style: TextStyle(fontSize: 11.5, color: palette.muted),
+            ),
+          ],
+          if (!_recurring) ...[
+            gap,
+            if (tight && !_showDescription)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _showDescription = true),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Ajouter une description'),
+                ),
+              )
+            else ...[
+              const _FieldLabel('Description (facultatif)'),
+              TextFormField(
+                controller: _description,
+                minLines: 1,
+                maxLines: tight ? 2 : 3,
+              ),
+            ],
           ],
           if (_error != null) ...[
             const SizedBox(height: 10),
@@ -455,6 +515,44 @@ class _CategoryChip extends StatelessWidget {
                   color: selected ? onSolid : tone.text,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecurringToggle extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _RecurringToggle({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide(color: palette.border),
+    );
+    return Material(
+      color: palette.page,
+      shape: shape,
+      child: InkWell(
+        customBorder: shape,
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 2, 6, 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '↻ Paiement récurrent',
+                  style: TextStyle(fontSize: 13.5, color: palette.ink),
+                ),
+              ),
+              Switch(value: value, onChanged: onChanged),
             ],
           ),
         ),
