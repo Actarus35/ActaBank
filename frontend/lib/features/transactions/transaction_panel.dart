@@ -300,6 +300,11 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
           ],
           gap,
           const _FieldLabel('Moyen de paiement'),
+          if (methods.every((m) => m.archived))
+            Text(
+              "Aucun moyen de paiement — crée d'abord une banque, un compte puis un moyen de paiement dans les paramètres",
+              style: TextStyle(color: palette.muted),
+            ),
           DropdownButtonFormField<int>(
             initialValue: _methodId,
             isExpanded: true,

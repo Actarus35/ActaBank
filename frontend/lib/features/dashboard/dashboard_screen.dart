@@ -15,6 +15,7 @@ import '../auth/auth_repository.dart';
 import '../auth/user_avatar.dart';
 import '../settings/references_repository.dart';
 import 'stats_repository.dart';
+import 'getting_started_card.dart';
 
 const _gap = SizedBox(width: 14, height: 14);
 const _minFitHeight = 620.0;
@@ -22,12 +23,30 @@ const _cardChrome = 66.0;
 const _legendRatio = 1.4;
 
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final wide = isWide(context);
+    final steps = ref.watch(setupStepsProvider);
+    if (steps != null && steps.contains(false)) {
+      return Scaffold(
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const _Greeting(),
+            const SizedBox(height: 16),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: GettingStartedCard(done: steps),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       body: LayoutBuilder(

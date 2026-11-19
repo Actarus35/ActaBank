@@ -12,7 +12,8 @@ backend/database.db
 
 # Obsidian (cache d'espace de travail, propre à ta machine)
 Obsidian/.obsidian/workspace.json
-list-bugs.txt
+Obsidian/Ressources/*.png
+Obsidian/Ressources/list-bugs.md
 
 # Conception graphique
 design/
