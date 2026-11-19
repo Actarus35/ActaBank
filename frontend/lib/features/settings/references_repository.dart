@@ -26,28 +26,38 @@ const methodTypeLabels = {
   'ESPECE': 'Espèce',
 };
 
+String methodLabel(String type, {String? accountName, String? bankName}) {
+  final label = methodTypeLabels[type] ?? type;
+  if (accountName == null) return label;
+  if (bankName == null) return '$label · $accountName';
+  return '$label · $accountName ($bankName)';
+}
+
 class TransactionMethod {
   final int id;
   final String type;
   final int? accountId;
   final String? accountName;
   final bool archived;
+  final String? bankName;
 
-  TransactionMethod({required this.id, required this.type, this.accountId, this.accountName, required this.archived});
+  TransactionMethod({required this.id, required this.type, this.accountId, this.accountName, required this.archived, this.bankName});
 
   factory TransactionMethod.fromJson(Map<String, dynamic> json) {
     final account = json['account'] as Map<String, dynamic>?;
+    final bank = account?['bank'] as Map<String, dynamic>?;
     return TransactionMethod(
       id: json['transmet_id'] as int,
       type: json['transmet_type'] as String,
       accountId: json['account_id'] as int?,
       accountName: account?['account_name'] as String?,
       archived: json['transmet_archived'] as bool,
+      bankName: bank?['bank_name'] as String?,
     );
   }
 
   String get typeLabel => methodTypeLabels[type] ?? type;
-  String get displayName => accountName == null ? type : '$typeLabel · $accountName';
+  String get displayName => methodLabel(type, accountName: accountName, bankName: bankName);
 }
 
 class Tag {

@@ -63,11 +63,7 @@ class Transaction {
         );
     }
 
-    String get subtitle {
-        final label = methodTypeLabels[methodType] ?? methodType;
-        final where = bankName ?? accountName;
-        return where == null ? label : '$label · $where';
-    }
+    String get subtitle => methodLabel(methodType, accountName: accountName, bankName: bankName);
 }
 
 class TransactionsRepository {
