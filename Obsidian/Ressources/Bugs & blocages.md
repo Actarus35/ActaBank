@@ -22,4 +22,7 @@ tags: [ressources]
 
 ---
 
-<!-- Ajoute tes entrées ici au fur et à mesure -->
+- **Moyens de paiement indiscernables** : deux comptes sans nom du même type dans deux
+  banques (ex. deux « Compte courant ») donnent deux cartes affichées pareil.
+  Piste : ajouter la banque au libellé du moyen de paiement quand le compte n'a pas de nom
+  (« Carte · Compte courant (CIC) »).

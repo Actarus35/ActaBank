@@ -1,11 +1,11 @@
 {
-    "name": "actabank",
-    "short_name": "actabank",
+    "name": "ActaBank",
+    "short_name": "ActaBank",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#E8663D",
+    "theme_color": "#E8663D",
+    "description": "Mes comptes, simplement",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
