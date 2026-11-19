@@ -166,6 +166,18 @@ A faire quand tout le reste fonctionne avec un code clean :
 - créer une catégorie ou un tag directement depuis le formulaire de transaction
 - pagination et recherche côté serveur des transactions
 - transferts entre ses propres comptes (« transaction interne », ni dépense ni revenu)
+- application **Android** (même code Flutter) : APK signé distribué hors Play Store, API en
+  HTTPS obligatoire (Android refuse le HTTP non chiffré), adresse d'API absolue.
+  iPhone exclu (compilation impossible sans Mac) : les utilisateurs iPhone passent par la
+  version web ajoutée à l'écran d'accueil
+- **mode hors ligne**, par niveaux :
+  1. lecture hors ligne (cache local des dernières données)
+  2. ajout de transactions hors ligne (file d'attente locale rejouée au retour du réseau,
+     identifiant généré côté client pour éviter les doublons)
+  3. hors ligne complet (base locale, API de synchronisation, gestion des conflits) —
+     à décider par un ADR
+- applications **Windows et Linux** (même code Flutter ; compilation Windows uniquement
+  sous Windows), après l'application mobile
 - à plus long terme : transferts entre utilisateurs de l'application et partage de dépenses
   (type Tricount)
 
