@@ -588,8 +588,8 @@ class _TransferTile extends StatelessWidget {
       ),
     );
     final amount = Text(
-      formatAmount(outgoing.amount.abs()),   // ni + ni − : l'argent ne fait que changer de compte
-      style: TextStyle(fontSize: wide ? 15 : 14, fontWeight: FontWeight.w600, color: palette.ink),
+      formatAmount(outgoing.amount.abs()),
+      style: TextStyle(fontSize: wide ? 15 : 14, fontWeight: FontWeight.w600, color: transferTone.background),
     );
 
     return InkWell(
