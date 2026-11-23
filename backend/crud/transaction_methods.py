@@ -1,14 +1,41 @@
 from sqlalchemy.orm import Session
+from enums.transaction_type import TransactionType
 from models.transaction_methods import TransactionMethod
 from schemas.transaction_methods import TransactionMethodCreate, TransactionMethodUpdate
 
 
 def get_transaction_methods(db: Session, user_id: int):
-    return db.query(TransactionMethod).filter(TransactionMethod.user_id == user_id).all()
+    return db.query(TransactionMethod).filter(
+        TransactionMethod.user_id == user_id,
+        TransactionMethod.transmet_internal.is_(False),
+    ).all()
 
 
 def get_transaction_method(db: Session, transmet_id: int, user_id: int):
-    return db.query(TransactionMethod).filter(TransactionMethod.transmet_id == transmet_id, TransactionMethod.user_id == user_id).first()
+    return db.query(TransactionMethod).filter(
+        TransactionMethod.transmet_id == transmet_id,
+        TransactionMethod.user_id == user_id,
+        TransactionMethod.transmet_internal.is_(False),
+    ).first()
+
+
+def get_or_create_internal_method(db: Session, account_id: int, user_id: int):
+    """Moyen technique d'un compte, utilisé uniquement par les transferts."""
+    method = db.query(TransactionMethod).filter(
+        TransactionMethod.account_id == account_id,
+        TransactionMethod.user_id == user_id,
+        TransactionMethod.transmet_internal.is_(True),
+    ).first()
+    if method is None:
+        method = TransactionMethod(
+            transmet_type=TransactionType.VIREMENT,
+            account_id=account_id,
+            user_id=user_id,
+            transmet_internal=True,
+        )
+        db.add(method)
+        db.flush()
+    return method
 
 
 def create_transaction_method(db: Session, transmet: TransactionMethodCreate, user_id: int):

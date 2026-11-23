@@ -2,23 +2,22 @@ from datetime import datetime
 
 
 def _deux_comptes(client, headers):
-    """Un compte courant (1000 €) et un livret (0 €), chacun avec un moyen de paiement."""
+    """Un compte courant (1000 €) et un livret (0 €), sans aucun moyen de paiement visible."""
     b = client.post("/banks/", json={"bank_name": "CIC", "bank_color": "RED"}, headers=headers).json()
-    methodes = []
+    comptes = []
     for nom, type_, initial in [("Courant", "COURANT", "1000.00"), ("Livret", "EPARGNE", "0.00")]:
         a = client.post("/accounts/", json={
             "account_name": nom, "account_type": type_,
             "bank_id": b["bank_id"], "account_initial_balance": initial,
         }, headers=headers).json()
-        m = client.post("/transaction_methods/", json={"transmet_type": "VIREMENT", "account_id": a["account_id"]}, headers=headers).json()
-        methodes.append(m["transmet_id"])
-    return methodes
+        comptes.append(a["account_id"])
+    return comptes
 
 
 def _transfert(client, headers, source, cible, montant="200.00"):
     return client.post("/transfers/", json={
-        "from_method_id": source,
-        "to_method_id": cible,
+        "from_account_id": source,
+        "to_account_id": cible,
         "amount": montant,
         "transfer_date": datetime.now().isoformat(),
     }, headers=headers)
@@ -43,7 +42,7 @@ def test_transfert_exclu_des_stats_mais_compte_dans_les_soldes(client, alice):
     assert float(s["revenus"]) == 0
     assert float(s["depenses"]) == 0
     assert s["nb_transactions"] == 0
-    assert float(s["solde"]) == 1000          # -200 + 200 : le total ne bouge pas
+    assert float(s["solde"]) == 1000
 
     assert client.get("/stats/by-category?period=all", headers=alice).json() == []
     assert client.get("/stats/by-name?period=all", headers=alice).json() == []
@@ -73,5 +72,43 @@ def test_transfert_validations(client, alice, bob):
     assert _transfert(client, alice, courant, courant).status_code == 422            # même compte
     assert _transfert(client, alice, courant, livret, "0").status_code == 422        # montant nul
     assert _transfert(client, alice, courant, livret, "-10.00").status_code == 422   # montant négatif
-    assert _transfert(client, bob, courant, livret).status_code == 422               # moyens d'Alice
+    assert _transfert(client, bob, courant, livret).status_code == 422               # comptes d'Alice
     assert _transfert(client, {}, courant, livret).status_code == 401                # non connecté
+
+
+def test_moyen_interne_invisible_et_reutilise(client, alice):
+    courant, livret = _deux_comptes(client, alice)
+    sortie1, _ = _transfert(client, alice, courant, livret).json()
+    sortie2, _ = _transfert(client, alice, courant, livret).json()
+    assert sortie1["transmet_id"] == sortie2["transmet_id"]          # un seul moyen interne par compte
+    assert client.get("/transaction_methods/", headers=alice).json() == []
+    assert client.get(f"/transaction_methods/{sortie1['transmet_id']}", headers=alice).status_code == 404
+
+
+def test_moyen_interne_inutilisable_pour_une_transaction(client, alice):
+    courant, livret = _deux_comptes(client, alice)
+    sortie, _ = _transfert(client, alice, courant, livret).json()
+    r = client.post("/transactions/", json={
+        "transac_name": "Triche", "transac_amount": "-5.00",
+        "transac_date": datetime.now().isoformat(), "transmet_id": sortie["transmet_id"],
+    }, headers=alice)
+    assert r.status_code == 422
+
+
+def test_transfert_vers_compte_archive_refuse(client, alice):
+    courant, livret = _deux_comptes(client, alice)
+    client.patch(f"/accounts/{livret}", json={"account_archived": True}, headers=alice)
+    assert _transfert(client, alice, courant, livret).status_code == 422
+
+
+def test_compte_avec_transferts_non_supprimable(client, alice):
+    courant, livret = _deux_comptes(client, alice)
+    _transfert(client, alice, courant, livret)
+    assert client.delete(f"/accounts/{livret}", headers=alice).status_code == 409
+
+
+def test_compte_supprimable_apres_suppression_des_transferts(client, alice):
+    courant, livret = _deux_comptes(client, alice)
+    sortie, _ = _transfert(client, alice, courant, livret).json()
+    client.delete(f"/transactions/{sortie['transac_id']}", headers=alice)
+    assert client.delete(f"/accounts/{livret}", headers=alice).status_code == 204

@@ -10,6 +10,7 @@ class TransactionMethod(Base):
     transmet_id: Mapped[int] = mapped_column(primary_key=True)
     transmet_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType), nullable=True)
     transmet_archived: Mapped[bool] = mapped_column(nullable=False, default=False, server_default=false())
+    transmet_internal: Mapped[bool] = mapped_column(nullable=False, default=False, server_default=false())
 
     account_id: Mapped[int] = mapped_column(ForeignKey("accounts.account_id"), nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)

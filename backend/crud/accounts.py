@@ -22,6 +22,8 @@ def create_account(db: Session, account: AccountCreate, user_id: int):
 def delete_account(db: Session, account_id: int, user_id: int):
     account = get_account(db, account_id, user_id)
     if account:
+        for method in list(account.methods):
+            db.delete(method)
         db.delete(account)
         db.commit()
     return account
