@@ -64,4 +64,10 @@ LabelTone labelTone(String? name, Brightness brightness) {
   );
 }
 
+final transferTone = LabelTone(
+  solid: oklch(0.87, 0.18, 95),
+  background: oklch(0.87, 0.18, 95),
+  text: const Color(0xFF1C1A17),
+);
+
 Color colorFromName(String? name) => labelTone(name, Brightness.light).solid;

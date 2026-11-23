@@ -563,14 +563,14 @@ class _TypeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final yellow = labelTone('YELLOW', Theme.of(context).brightness);
 
     Widget segment(_Kind kind) {
       final selected = kind == value;
       final (label, background, foreground) = switch (kind) {
         _Kind.expense => ('− Dépense', palette.negBg, palette.neg),
         _Kind.income => ('+ Revenu', palette.posBg, palette.posText),
-        _Kind.transfer => ('⇄ Transfert', yellow.background, yellow.text),      };
+        _Kind.transfer => ('⇄ Transfert', transferTone.background, transferTone.text),
+      };
       return Expanded(
         child: Material(
           color: selected ? background : Colors.transparent,
