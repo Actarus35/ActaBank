@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
@@ -30,6 +32,7 @@ class TransactionRead(TransactionBase):
     method: TransactionMethodRead
     category: Optional[CategoryRead] = None
     recurring_transaction: Optional[RecurringTransactionRead] = None
+    transac_transfer_id: Optional[uuid.UUID] = None
     tags: list[TagRead] = []
 
     model_config = ConfigDict(from_attributes=True)

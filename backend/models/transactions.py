@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import ForeignKey, DateTime, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
@@ -19,6 +21,7 @@ class Transaction(Base):
     transmet_id: Mapped[int] = mapped_column(ForeignKey("transaction_methods.transmet_id"), nullable=False)
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.category_id", ondelete="SET NULL"), nullable=True)
     rectrans_id: Mapped[int] = mapped_column(ForeignKey("recurring_transactions.rectrans_id", ondelete="SET NULL"), nullable=True)
+    transac_transfer_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, index=True)
 
     method = relationship("TransactionMethod", back_populates="transactions")
     category = relationship("Category", back_populates="transactions")
