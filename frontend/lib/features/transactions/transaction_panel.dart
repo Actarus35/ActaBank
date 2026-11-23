@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/colors.dart';
 import '../../core/format.dart';
-import '../../core/theme/app_palette.dart';
+import 'transactions_repository.dart';
 import '../../core/widgets/tag_chip.dart';
+import '../../core/theme/app_palette.dart';
+import '../dashboard/stats_repository.dart';
 import '../../core/widgets/pill_segmented.dart';
 import '../recurring/recurring_repository.dart';
 import '../settings/references_repository.dart';
-import 'transactions_repository.dart';
+
+enum _Kind { expense, income, transfer }
 
 class TransactionPanel extends ConsumerStatefulWidget {
   final Transaction? transaction;
@@ -27,7 +30,9 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
   final _amount = TextEditingController();
   final _description = TextEditingController();
 
-  bool _isExpense = true;
+  _Kind _kind = _Kind.expense;
+  int? _fromAccountId;
+  int? _toAccountId;
   DateTime _date = DateTime.now();
   int? _methodId;
   int? _categoryId;
@@ -59,8 +64,9 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
       _amount.text = t.amount.abs().toStringAsFixed(2).replaceAll('.', ',');
       _description.text = t.description ?? '';
       _showDescription = _description.text.isNotEmpty;
-      _isExpense = t.amount < 0;
+      _kind = t.isTransfer ? _Kind.transfer : (t.amount < 0 ? _Kind.expense : _Kind.income);
       _date = t.date;
+      _fromAccountId = t.accountId;
       _methodId = t.methodId;
       _categoryId = t.categoryId;
       _tagIds.addAll(t.tags.map((tag) => tag.id));
@@ -74,6 +80,17 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
     _description.dispose();
     super.dispose();
   }
+
+  void _setKind(_Kind kind) => setState(() {
+    _kind = kind;
+    if (kind == _Kind.transfer) {
+      // Un transfert n'a ni catégorie, ni tags, ni récurrence (voir ADR)
+      _recurring = false;
+      _categoryId = null;
+      _tagIds.clear();
+      if (_name.text.trim().isEmpty) _name.text = 'Transfert';
+    }
+  });
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -92,38 +109,58 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
     final value = double.parse(_amount.text.replaceAll(',', '.'));
     final description = _description.text.trim();
 
-    try {
-      final amount = _isExpense ? -value : value;
-      if (_recurring) {
-        await ref.read(recurringRepositoryProvider).save(
-          name: _name.text.trim(),
-          amount: amount,
-          frequency: _frequency,
-          startDate: _date,
-          methodId: _methodId!,
-          categoryId: _categoryId,
-          tagIds: _tagIds.toList(),
-        );
-        ref.invalidate(recurringProvider);
-      } else {
-        await ref.read(transactionsRepositoryProvider).save(
-          id: widget.transaction?.id,
-          name: _name.text.trim(),
+        try {
+      final repo = ref.read(transactionsRepositoryProvider);
+      final name = _name.text.trim();
+      final desc = description.isEmpty ? null : description;
+      final t = widget.transaction;
+
+      if (t != null && t.isTransfer) {
+        await repo.rename(t.id, name: name, description: desc);
+      } else if (_kind == _Kind.transfer) {
+        await repo.createTransfer(
+          fromAccountId: _fromAccountId!,
+          toAccountId: _toAccountId!,
+          amount: value,
           date: _date,
-          amount: amount,
-          description: description.isEmpty ? null : description,
-          methodId: _methodId!,
-          categoryId: _categoryId,
-          tagIds: _tagIds.toList(),
+          name: name,
+          description: desc,
         );
+        ref.invalidate(balancesProvider);
+      } else {
+        final amount = _kind == _Kind.expense ? -value : value;
+        if (_recurring) {
+            await ref.read(recurringRepositoryProvider).save(
+            name: _name.text.trim(),
+            amount: amount,
+            frequency: _frequency,
+            startDate: _date,
+            methodId: _methodId!,
+            categoryId: _categoryId,
+            tagIds: _tagIds.toList(),
+          );
+          ref.invalidate(recurringProvider);
+        } else {
+          await ref.read(transactionsRepositoryProvider).save(
+            id: widget.transaction?.id,
+            name: _name.text.trim(),
+            date: _date,
+            amount: amount,
+            description: description.isEmpty ? null : description,
+            methodId: _methodId!,
+            categoryId: _categoryId,
+            tagIds: _tagIds.toList(),
+          );
+        }
       }
       ref.invalidate(transactionsProvider);
       if (mounted) widget.onClose();
-    } on DioException {
+    } on DioException catch (e) {
+      final detail = e.response?.data is Map ? e.response!.data['detail'] : null;
       if (mounted) {
         setState(() {
           _saving = false;
-          _error = "Impossible d'enregistrer la transaction";
+          _error = detail is String ? detail : "Impossible d'enregistrer la transaction";
         });
       }
     }
@@ -134,7 +171,9 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Supprimer cette transaction ?'),
-        content: const Text('Cette action est définitive.'),
+        content: Text(widget.transaction!.isTransfer
+          ? 'Les deux côtés du transfert seront supprimés.'
+          : 'Cette action est définitive.'),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
           FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Supprimer')),
@@ -172,6 +211,8 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
     final categories = ref.watch(categoriesProvider).valueOrNull ?? const <Category>[];
     final tags = ref.watch(tagsProvider).valueOrNull ?? const <Tag>[];
     final editing = widget.transaction != null;
+    final isTransfer = _kind == _Kind.transfer;
+    final locked = editing && widget.transaction!.isTransfer;
 
     final tight = height < 680;
     final gap = SizedBox(height: height >= 820 ? 14 : tight ? 6 : 10);
@@ -189,10 +230,11 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
         final n = double.tryParse((v ?? '').replaceAll(',', '.'));
         return (n == null || n <= 0) ? 'Montant positif attendu' : null;
       },
+      enabled: !locked,
     );
 
     final dateField = InkWell(
-      onTap: _pickDate,
+      onTap: locked ? null : _pickDate,
       borderRadius: BorderRadius.circular(13),
       child: InputDecorator(
         decoration: const InputDecoration(
@@ -201,6 +243,65 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
         child: Text(formatLongDate(_date), overflow: TextOverflow.ellipsis),
       ),
     );
+
+    Widget methodField({
+      required int? value,
+      required ValueChanged<int?>? onChanged,
+      String? Function(int?)? validator,
+    }) {
+      return DropdownButtonFormField<int>(
+        initialValue: value,
+        isExpanded: true,
+        items: [
+          for (final m in methods.where((m) => !m.archived || m.id == value))
+            DropdownMenuItem(
+              value: m.id,
+              child: Text(
+                m.archived ? '${m.displayName} (archivé)' : m.displayName,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
+        onChanged: onChanged,
+        validator: validator ?? (v) => v == null ? 'Obligatoire' : null,
+      );
+    }
+
+    final accounts = ref.watch(balancesProvider).valueOrNull?.accounts ?? const <AccountBalance>[];
+
+    Widget accountField({
+      required int? value,
+      required ValueChanged<int?>? onChanged,
+      String? Function(int?)? validator,
+    }) {
+      return DropdownButtonFormField<int>(
+        initialValue: value,
+        isExpanded: true,
+        items: [
+          for (final a in accounts.where((a) => !a.archived || a.id == value))
+            DropdownMenuItem(
+              value: a.id,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      a.bankName == null ? a.name : '${a.name} (${a.bankName})',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    formatAmount(a.balance),
+                    style: TextStyle(fontWeight: FontWeight.w600, color: palette.muted),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        onChanged: onChanged,
+        validator: validator ?? (v) => v == null ? 'Obligatoire' : null,
+      );
+    }
 
     final form = Form(
       key: _formKey,
@@ -230,8 +331,9 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
           ),
           SizedBox(height: tight ? 2 : 8),
           _TypeToggle(
-            isExpense: _isExpense,
-            onChanged: (v) => setState(() => _isExpense = v),
+            value: _kind,
+            onChanged: locked ? null : _setKind,
+            showTransfer: !editing || locked,   // une dépense existante ne devient pas un transfert
           ),
           gap,
           Row(
@@ -262,66 +364,88 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Obligatoire' : null,
           ),
           gap,
-          const _FieldLabel('Catégorie'),
-          if (categories.isEmpty)
-            Text('Aucune catégorie — crée-en dans les paramètres', style: TextStyle(color: palette.muted))
-          else
-            Wrap(
-              spacing: 7,
-              runSpacing: tight ? 5 : 7,
-              children: [
-                for (final c in categories)
-                  _CategoryChip(
-                    label: c.name,
-                    colorName: c.color,
-                    selected: _categoryId == c.id,
-                    onTap: () => setState(() => _categoryId = _categoryId == c.id ? null : c.id),
-                  ),
-              ],
-            ),
-          if (tags.isNotEmpty) ...[
+          if (!isTransfer) ...[
+            const _FieldLabel('Catégorie'),
+            if (categories.isEmpty)
+              Text('Aucune catégorie — crée-en dans les paramètres', style: TextStyle(color: palette.muted))
+            else
+              Wrap(
+                spacing: 7,
+                runSpacing: tight ? 5 : 7,
+                children: [
+                  for (final c in categories)
+                    _CategoryChip(
+                      label: c.name,
+                      colorName: c.color,
+                      selected: _categoryId == c.id,
+                      onTap: () => setState(() => _categoryId = _categoryId == c.id ? null : c.id),
+                    ),
+                ],
+              ),
+            if (tags.isNotEmpty) ...[
+              gap,
+              const _FieldLabel('Tags'),
+              Wrap(
+                spacing: 7,
+                runSpacing: tight ? 5 : 7,
+                children: [
+                  for (final g in tags)
+                    TagChip(
+                      label: g.name,
+                      colorName: g.color,
+                      selected: _tagIds.contains(g.id),
+                      onTap: () => setState(() {
+                        _tagIds.contains(g.id) ? _tagIds.remove(g.id) : _tagIds.add(g.id);
+                      }),
+                    ),
+                ],
+              ),
+            ],
             gap,
-            const _FieldLabel('Tags'),
-            Wrap(
-              spacing: 7,
-              runSpacing: tight ? 5 : 7,
-              children: [
-                for (final g in tags)
-                  TagChip(
-                    label: g.name,
-                    colorName: g.color,
-                    selected: _tagIds.contains(g.id),
-                    onTap: () => setState(() {
-                      _tagIds.contains(g.id) ? _tagIds.remove(g.id) : _tagIds.add(g.id);
-                    }),
-                  ),
-              ],
+          ],
+          if (isTransfer) ...[
+            if (!locked && accounts.where((a) => !a.archived).length < 2)
+              Text(
+                'Il faut au moins deux comptes pour faire un transfert — crée-les dans les paramètres',
+                style: TextStyle(color: palette.muted),
+              ),
+            _FieldLabel(locked ? 'Compte' : 'Depuis le compte'),
+            accountField(
+              value: _fromAccountId,
+              onChanged: locked ? null : (v) => setState(() => _fromAccountId = v),
+            ),
+            if (!locked) ...[
+              gap,
+              const _FieldLabel('Vers le compte'),
+              accountField(
+                value: _toAccountId,
+                onChanged: (v) => setState(() => _toAccountId = v),
+                validator: (v) => v == null
+                  ? 'Obligatoire'
+                  : (v == _fromAccountId ? 'Choisis un autre compte' : null),
+              ),
+            ],
+          ] else ...[
+            const _FieldLabel('Moyen de paiement'),
+            if (methods.every((m) => m.archived))
+              Text(
+                "Aucun moyen de paiement — crée d'abord une banque, un compte puis un moyen de paiement dans les paramètres",
+                style: TextStyle(color: palette.muted),
+              ),
+            methodField(
+              value: _methodId,
+              onChanged: (v) => setState(() => _methodId = v),
             ),
           ],
-          gap,
-          const _FieldLabel('Moyen de paiement'),
-          if (methods.every((m) => m.archived))
+          if (locked) ...[
+            gap,
             Text(
-              "Aucun moyen de paiement — crée d'abord une banque, un compte puis un moyen de paiement dans les paramètres",
-              style: TextStyle(color: palette.muted),
+              '⇄ Transfert entre comptes : seuls le nom et la description sont modifiables. '
+              'Pour changer le montant ou la date, supprime-le puis recrée-le.',
+              style: TextStyle(fontSize: 11.5, color: palette.muted),
             ),
-          DropdownButtonFormField<int>(
-            initialValue: _methodId,
-            isExpanded: true,
-            items: [
-              for (final m in methods.where((m) => !m.archived || m.id == _methodId))
-                DropdownMenuItem(
-                  value: m.id,
-                  child: Text(
-                    m.archived ? '${m.displayName} (archivé)' : m.displayName,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
-            onChanged: (v) => setState(() => _methodId = v),
-            validator: (v) => v == null ? 'Obligatoire' : null,
-          ),
-          if (!editing) ...[
+          ],
+          if (!editing && !isTransfer) ...[
             gap,
             _RecurringToggle(
               value: _recurring,
@@ -342,7 +466,7 @@ class _TransactionPanelState extends ConsumerState<TransactionPanel> {
               const SizedBox(height: 6),
               Text(_recurringHint, style: TextStyle(fontSize: 11.5, color: palette.muted)),
             ],
-          ] else if (widget.transaction!.recurring) ...[
+          ] else if (editing && widget.transaction!.recurring) ...[
             gap,
             Text(
               '↻ Générée par un paiement récurrent : la modifier ne change que cette occurrence.',
@@ -430,31 +554,35 @@ class _FieldLabel extends StatelessWidget {
 }
 
 class _TypeToggle extends StatelessWidget {
-  final bool isExpense;
-  final ValueChanged<bool> onChanged;
+  final _Kind value;
+  final ValueChanged<_Kind>? onChanged;   // null = verrouillé
+  final bool showTransfer;
 
-  const _TypeToggle({required this.isExpense, required this.onChanged});
+  const _TypeToggle({required this.value, required this.onChanged, this.showTransfer = true});
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final yellow = labelTone('YELLOW', Theme.of(context).brightness);
 
-    Widget segment(bool expense) {
-      final selected = expense == isExpense;
-      final background = expense ? palette.negBg : palette.posBg;
-      final foreground = expense ? palette.neg : palette.posText;
+    Widget segment(_Kind kind) {
+      final selected = kind == value;
+      final (label, background, foreground) = switch (kind) {
+        _Kind.expense => ('− Dépense', palette.negBg, palette.neg),
+        _Kind.income => ('+ Revenu', palette.posBg, palette.posText),
+        _Kind.transfer => ('⇄ Transfert', yellow.background, yellow.text),      };
       return Expanded(
         child: Material(
           color: selected ? background : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           child: InkWell(
             borderRadius: BorderRadius.circular(10),
-            onTap: () => onChanged(expense),
+            onTap: onChanged == null ? null : () => onChanged!(kind),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Center(
                 child: Text(
-                  expense ? '− Dépense' : '+ Revenu',
+                  label,
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -470,11 +598,15 @@ class _TypeToggle extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: palette.soft,
-        borderRadius: BorderRadius.circular(13),
+      decoration: BoxDecoration(color: palette.soft, borderRadius: BorderRadius.circular(13)),
+      child: Row(
+        children: [
+          segment(_Kind.expense),
+          const SizedBox(width: 4),
+          segment(_Kind.income),
+          if (showTransfer) ...[const SizedBox(width: 4), segment(_Kind.transfer)],
+        ],
       ),
-      child: Row(children: [segment(true), const SizedBox(width: 4), segment(false)]),
     );
   }
 }

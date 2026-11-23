@@ -104,7 +104,7 @@ Future<void> deleteAccount(BuildContext context, WidgetRef ref, Account account)
     showError(
       context,
       e.response?.statusCode == 409
-        ? 'Ce compte possède encore des moyens de paiement : archive-le plutôt que de le supprimer'
+        ? 'Ce compte possède encore des moyens de paiement ou des transferts : archive-le plutôt que de le supprimer'
         : 'Impossible de supprimer le compte',
     );
   }

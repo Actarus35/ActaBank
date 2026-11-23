@@ -98,8 +98,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   bool _keep(Transaction t) {
     final typeOk = switch (_filter) {
       _Filter.all => true,
-      _Filter.expenses => t.amount < 0,
-      _Filter.income => t.amount > 0,
+      _Filter.expenses => t.amount < 0 && !t.isTransfer,
+      _Filter.income => t.amount > 0 && !t.isTransfer,
     };
     final query = _search.text.trim().toLowerCase();
     return typeOk
@@ -439,16 +439,16 @@ class _TransactionTile extends StatelessWidget {
     final palette = context.palette;
     final brightness = Theme.of(context).brightness;
     final wide = isWide(context);
-    final tone = labelTone(t.categoryColor, brightness);
-    final category = t.categoryName ?? 'Sans catégorie';
+    final colorName = t.isTransfer ? 'YELLOW' : t.categoryColor;
+    final tone = labelTone(colorName, brightness);
+    final category = t.isTransfer ? '⇄ Transfert' : (t.categoryName ?? 'Sans catégorie');
 
     final amount = Text(
       formatAmount(t.amount, signed: true),
       style: TextStyle(
         fontSize: wide ? 15 : 14,
         fontWeight: FontWeight.w600,
-        color: t.amount > 0 ? palette.pos : palette.neg,
-      ),
+        color: t.isTransfer ? tone.text : (t.amount > 0 ? palette.pos : palette.neg),      ),
     );
 
     return InkWell(
@@ -521,7 +521,7 @@ class _TransactionTile extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             if (wide) ...[
-              ToneChip(label: category, colorName: t.categoryColor),
+              ToneChip(label: category, colorName: colorName),
               const SizedBox(width: 14),
               SizedBox(width: 104, child: Align(alignment: Alignment.centerRight, child: amount)),
             ] else
