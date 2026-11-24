@@ -10,11 +10,15 @@ venv/
 backend/database.db
 *.sqlite3
 
-# Obsidian (cache d'espace de travail, propre à ta machine)
+# Obsidian
 Obsidian/.obsidian/workspace.json
+Obsidian/.trash/
 
 # Conception graphique
 design/
 
 # Extension VS Code Counter
-.VSCodeCounter/Obsidian/.trash/
+.VSCodeCounter/
+
+# Marqueurs Windows (Mark of the Web) créés lors des copies vers WSL
+*:Zone.Identifier
