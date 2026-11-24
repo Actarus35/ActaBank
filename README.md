@@ -1,200 +1,141 @@
 # ActaBank
 
-Ce dépôt git est un projet personnel ayant pour but de m'initier / me former à différentes technologies dans le cadre d'un projet concret.
+> Application de gestion de comptes personnels, auto-hébergée, pour remplacer le carnet de comptes ou le fichier Excel.
+
+![Tableau de bord d'ActaBank](docs/dashboard.png)
+
+<details>
+<summary><b>Plus de captures</b> (transactions, paramètres, version mobile)</summary>
+
+### Transactions
+![Liste des transactions, avec un transfert entre comptes et des tags](docs/transactions.png)
+
+### Paramètres
+![Banques, comptes, catégories, tags et paiements récurrents](docs/parametres-1.png)
+![Moyens de paiement et paiements récurrents](docs/parametres-2.png)
+
+### Version mobile (thème sombre)
+<p>
+  <img src="docs/mobile-sombre-1.png" alt="Tableau de bord sur mobile" width="280">
+  <img src="docs/mobile-sombre-2.png" alt="Graphiques sur mobile" width="280">
+</p>
+
+</details>
+
+ActaBank est un projet personnel **d'apprentissage** : chaque technologie a été choisie pour être apprise en construisant un outil réellement utilisé au quotidien, par moi et par ma famille.
+
+## Fonctionnalités
+
+- **Banques, comptes et moyens de paiement** (carte, virement, chèque, espèces), archivés plutôt que supprimés pour préserver l'historique
+- **Transactions** avec une catégorie et plusieurs tags, recherche et filtres
+- **Paiements récurrents** générés automatiquement (hebdomadaires, mensuels, annuels)
+- **Transferts entre comptes**, exclus des revenus et des dépenses
+- **Tableau de bord** : solde, revenus et dépenses, répartition par catégorie, évolution du solde, bilan mensuel, solde de chaque compte
+- **Multi-utilisateur** : chacun ne voit que ses propres données ; inscriptions ouvrables ou fermables
+- **Premiers pas** guidés pour les nouveaux utilisateurs
+- Thème clair ou sombre, interface adaptée à l'ordinateur comme au téléphone
+
+## Architecture
+
+```mermaid
+flowchart LR
+    U["Navigateur<br/>(ordinateur ou téléphone)"] -- "HTTPS (via VPN WireGuard)" --> C["Caddy<br/>certificat Let's Encrypt"]
+    C --> N["nginx<br/>frontend Flutter web"]
+    N -- "/api" --> A["API FastAPI"]
+    A --> P[("PostgreSQL")]
+    S["Sauvegarde quotidienne<br/>pg_dump"] --> P
+```
+
+L'application tourne dans une stack Docker sur un serveur à domicile. Seul Caddy publie un port, et il n'est joignable qu'à travers un VPN WireGuard : rien n'est exposé sur Internet. Le nom de domaine sert uniquement à obtenir un certificat HTTPS valide, par défi DNS.
+
+## Stack technique
+
+| Couche | Technologies |
+|---|---|
+| Backend | Python, FastAPI, SQLAlchemy, Alembic, Pydantic |
+| Base de données | PostgreSQL (SQLite en mémoire pour les tests) |
+| Sécurité | JWT, bcrypt, données cloisonnées par utilisateur, HTTPS |
+| Frontend | Flutter (web), Riverpod, dio, fl_chart |
+| Déploiement | Docker, GitHub Container Registry, Portainer, Caddy, nginx |
+| Accès distant | WireGuard |
+
+## Démarrer en local
+
+**Backend**
+```bash
+cd backend
+cp .env.example .env          # puis renseigner les valeurs (voir backend/README.md)
+docker compose up -d db       # PostgreSQL dans un conteneur
+alembic upgrade head          # applique les migrations
+uvicorn main:app --reload     # API sur http://127.0.0.1:8000, documentation sur /docs
+```
+
+**Frontend**
+```bash
+cd frontend
+flutter pub get
+flutter run -d web-server --web-port=8081    # http://localhost:8081
+```
+
+**Tests**
+```bash
+cd backend
+python -m pytest
+```
+
+## Déploiement
+
+Trois images sont publiées sur GitHub Container Registry, toujours avec le même numéro de version : `actabank-api`, `actabank-web` et `actabank-proxy`. Le tag git porte un `v`
+(`v0.7.0`), le tag d'image n'en porte pas (`0.7.0`).
+
+La stack est décrite dans [`backend/stack.yml`](backend/stack.yml). Les migrations Alembic sont appliquées automatiquement au démarrage de l'API.
+
+| Variable | Rôle |
+|---|---|
+| `IMAGE_TAG` | Version des images à déployer |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Identifiants de la base |
+| `SECRET_KEY` | Clé de signature des jetons JWT |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Durée d'une session (30 minutes par défaut) |
+| `REGISTRATION_OPEN` | `true` pour autoriser les inscriptions, `false` pour les fermer |
+| `DOMAIN`, `DUCKDNS_TOKEN` | Nom de domaine et jeton pour le certificat HTTPS |
+| `HTTPS_PORT` | Seul port publié par la stack |
+| `BACKUP_DIR`, `BACKUP_KEEP_DAYS` | Dossier des sauvegardes et durée de conservation (14 jours par défaut) |
+
+**En cas d'urgence** (jeton volé, appareil perdu) : changer `SECRET_KEY` invalide tous les jetons existants, ce qui déconnecte immédiatement tous les utilisateurs.
 
-Ainsi, le but de ce projet est de créer une application permettant de faire ses comptes, afin de remplacer un fichier excel ou un carnet de comptes.
+**Avant une migration en production** : faire une sauvegarde manuelle avec `pg_dump`, en plus de la sauvegarde quotidienne.
 
-## Technologies utilisées
+## Documentation
 
-Je vais lister les différentes technologies que j'utiliserais dans ce projet dans l'ordre dans lequel je vais les ajouter / implémenter.
+- [`backend/README.md`](backend/README.md) — API et architecture en couches
+- [`backend/DATABASE.md`](backend/DATABASE.md) — modèle de données et règles d'intégrité
+- [`frontend/README.md`](frontend/README.md) — application Flutter
+- [`Obsidian/`](Obsidian/) — roadmap détaillée, fiches techniques et **décisions d'architecture (ADR)**
 
-### Base de données
+## Roadmap
 
-Dans un premier temps, j'utiliserais **SQLite** qui est simple à mettre en place, très complet et suffisant pour ce genre de projet au début.
+Le suivi au quotidien se fait dans les [issues](../../issues) et les
+[milestones](../../milestones). Les grandes étapes :
 
-Je me dirigerait plus tard versr une base de données **PostgreSQL** qui sera plus robuste et me permettra différents ajout de fonctionnalités.
+- [x] Modèle de données, API REST et logique métier testée
+- [x] Authentification JWT et cloisonnement des données par utilisateur
+- [x] Migration vers PostgreSQL et migrations Alembic
+- [x] Frontend Flutter web (tableau de bord, transactions, paramètres)
+- [x] Déploiement Docker, HTTPS, sauvegardes quotidiennes
+- [x] Paiements récurrents, catégories et tags, transferts entre comptes
+- [ ] Intégration continue (GitHub Actions)
+- [ ] Refresh tokens
+- [ ] Application Android
+- [ ] Mode hors ligne (lecture, puis saisie hors ligne)
+- [ ] Applications Windows et Linux
+- [ ] Import de relevés bancaires
 
-J'utiliserais également **SQLAlchemy** pour le mapping objet (ORM)
+## Démarche
 
-J'avais prévu d'intégrer **Apache Superset** pour les graphiques. J'y ai renoncé : branché directement sur la base, il aurait contourné le cloisonnement des données par utilisateur, qui est assuré par l'API. Les graphiques sont donc faits dans le frontend, à partir de routes d'agrégation dédiées.
+Ce projet a pour but de développer mes compétences sur chacune de ces technologies, avec une attention particulière à la sécurité, que je souhaite approfondir par la suite.
 
-### Backend
+Je n'utilise aucun LLM qui écrive du code à ma place : je suis le seul auteur du code de cette application, et je dois en comprendre chaque ligne. J'utilise Claude Code uniquement à des fins pédagogiques, pour relire et conseiller : il est explicitement configuré pour ne pouvoir modifier aucun fichier (voir [`CLAUDE.md`](CLAUDE.md) et [`.claude/settings.json`](.claude/settings.json)).
 
-Pour le Backend, j'utiliserais le langage **Python** afin de continuer à me familiariser avec celui-ci.
+## Licence
 
-Je mettrais également une API en place avec **FastAPI** que je ne connais pas du tout mais qui semble très performant, avec un typage clair et de la documentation qui se fait automatiquement. Il semble également correspondre parfaitement à une utilisation dans le cadre d'une application multi-plateforme.
-
-Je m'aiderais également de **Swagger**, que je maîtrise déjà bien, pour mettre cette API en place.
-
-### Authentification
-
-Hé oui, car même si c'est une application perso, j'ai pour objectif de faire de la cybersécurité par la suite, c'est pour ça que je souhaite rendre mon application sécurisée afin de m'entraîner à concevoir des applications sans failles de sécurités.
-
-Pour cette partie, j'utiliserais donc **JWT (JSON Web Token)** que j'apprendrais donc à utiliser avec **bcrypt** me permettant de générer des hash pour les mots de passe.
-
-Enfin, je mettrais peut-être plus tard en place un Refresh Token afin d'améliorer encore la sécurité de mon application.
-
-### Frontend
-
-J'ai finalement retenu **Flutter**, pour son aspect multi-plateforme (web, Android, bureau) à partir d'un seul code. La gestion d'état est faite avec **Riverpod**, les appels à l'API avec **dio** et les graphiques avec **fl_chart**.
-
-### Exposition en dehors du réseau local
-
-En effet, je ne l'ai pas encore mentionnée, mais cette application tournerait (l'API/backend et la base de donnée principalement) sur un ordinateur que je mettrais sur le réseau local. Ainsi, afin de pouvoir accéder à mon application de l'exterieur du réseau local, il faut que je l'expose et ceci crée encore une fois des failles de sécurités importantes (en effet, internet, c'est pas le lieu le plus safe). Je vais donc utiliser **WireGuard** qui est open source et gratuit, très sécurisé et très performant afin de gérer cette partie du projet.
-
-### Autre
-
-Enfin, dans une démarche d'apprentissage, je pourrais une fois le projet bien avancé, l'adapter avec différents outils afin de continuer à apprendre de nouveaux outils informatique.
-Ainsi, voici différents outils que je souhaiterais ajouter plus tard :
-- Docker
-- Test Unitaires (plutôt à faire au fur et à mesure)
-- CI (GitHub Actions)
-- Monitoring
-- Docs techniques
-
-## Gestion de projet / Planification
-
-Voici comment le projet va se dérouler.
-
-### 1 - Création du modéle de données et de la base de données associée
-
-##### Objectif : Créer une base de données saine, évolutive et BI-Compatible
-
-A faire :
-- Concevoir les tables
-- Choisir les types, les clés, les relations
-
-Commencer à penser Bi dès maintenant :
-- tables de faits,
-- tables de dimensions
-- dates séparées
-
-Résultat attendu :
-- Une première base de données claire et structurée
-
-### 2 - Début du backend / API
-
-##### Objectif : Avoir une API qui fonctionne rapidement
-
-A faire :
-- Créer un projet FastAPI
-- Connecter SQLite
-- Créer les routes HTML
-- Tester via /Docs
-
-Résultat attendu :
-- Ajouter une dépense depuis Swagger
-
-### 3 - Logique métier
-
-##### Objectif : Améliorer l'API pour que celle-ci fonctionne correctement de manière durable
-
-A faire :
-- Centraliser la logique métier
-- Gérer les erreurs proprement
-- Créer des tests unitaires
-
-Résultat attendu :
-- Des règles claires et fiables
-
-### 4 - Authentification & Sécurité API
-
-##### Objectif : Sécuriser l'accès avant d'aller plus loin
-
-A faire :
-- Auth JWT
-- Hash des mots de passe
-- Middleware de sécurité
-- Rôles (simple : user/admin)
-
-Résultat attendu :
-- Impossible d'accéder aux données sans Token
-
-### 5 - Migration PostgreSQL
-
-##### Objectif : Préparer la BI sérieuse
-
-A faire :
-- Installer PostgreSQL
-- Migrer SQLite --> PostgreSQL
-- Adapter SQLAlchemy
-
-Résultat attendu :
-- Même API, base de données plus robuste
-
-### 6 - BI : Apache Superset (abandonné)
-
-Étape abandonnée : les tableaux de bord sont réalisés dans le frontend (voir étape 7), à partir de routes d'agrégation de l'API, afin de respecter le cloisonnement des données par utilisateur.
-
-### 7 - Frontend
-
-##### Objectif : Une interface simple mais utilisable
-
-A faire :
-- Choisir l'outil à utiliser pour le frontend
-- Créer l'interface utilisateur
-
-Résultat attendu :
-- Possibilité d'utiliser l'application "pour de vrai"
-
-### 8 - Accès à distance sécurisé (WireGuard)
-
-##### Objectif : Accéder à l'application de partout
-
-A faire :
-- Installer WireGuard
-- Générer des clé
-- Configurer les clients (téléphone / ordinateur)
-- Tester l'accès API hors réseau
-
-Résultat attendu :
-- L'application fonctionne en dehors du réseau local
-
-### 9 - Fonctionnalités avancées
-
-##### Objectif : Amélioration de l'applications
-
-A faire quand tout le reste fonctionne avec un code clean :
-- dépenses récurrentes
-- import de relevés bancaires
-- catégories (une par transaction) et tags (plusieurs par transaction)
-- statistiques avancées
-- sauvegardes auto
-- logs
-- tests (100% de coverage)
-- un emoji par catégorie, affiché dans la tuile de chaque transaction (à la place de l'initiale)
-- créer une catégorie ou un tag directement depuis le formulaire de transaction
-- pagination et recherche côté serveur des transactions
-- transferts entre ses propres comptes (« transaction interne », ni dépense ni revenu)
-- application **Android** (même code Flutter) : APK signé distribué hors Play Store, API en
-  HTTPS obligatoire (Android refuse le HTTP non chiffré), adresse d'API absolue.
-  iPhone exclu (compilation impossible sans Mac) : les utilisateurs iPhone passent par la
-  version web ajoutée à l'écran d'accueil
-- **mode hors ligne**, par niveaux :
-  1. lecture hors ligne (cache local des dernières données)
-  2. ajout de transactions hors ligne (file d'attente locale rejouée au retour du réseau,
-     identifiant généré côté client pour éviter les doublons)
-  3. hors ligne complet (base locale, API de synchronisation, gestion des conflits) —
-     à décider par un ADR
-- applications **Windows et Linux** (même code Flutter ; compilation Windows uniquement
-  sous Windows), après l'application mobile
-- à plus long terme : transferts entre utilisateurs de l'application et partage de dépenses
-  (type Tricount)
-
-
-### 10 - Bonus
-
-##### Objectif : Apprentissage de nouveaux outils
-
-A faire :
-- Docker
-- Tests Unitaires
-- CI (GitHub Actions)
-- Monitoring
-- Docs techniques
-
-## Conclusion
-
-Ainsi, ce projet a pour but de développer mes compétences dans les différentes technologies citées précédemment.
-
-Dans le cadre de ce projet, je n'utiliserait aucun LLM écrivant du code à ma place afin d'être conscient de l'entièreté du code de cette application et d'en être le seul auteur. Je pourrais les utiliser à des fins pédagogiques comme pour Claude Code qui est explicitement paramétré pour ne pas pouvoir agir, seulement lire et me conseiller.
+Distribué sous licence MIT — voir [`LICENSE`](LICENSE).

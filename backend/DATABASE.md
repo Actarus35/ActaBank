@@ -78,11 +78,15 @@ en a obligatoirement une. La règle est vérifiée par l'API (422), pas par la b
 | `transmet_type` | enum `TransactionType` | nullable |
 | `account_id` | INTEGER | FK → `accounts`, nullable |
 | `transmet_archived` | BOOLEAN | NOT NULL, défaut `false` |
+| `transmet_internal` | BOOLEAN | NOT NULL, défaut `false` |
 | `user_id` | INTEGER | FK → `users`, NOT NULL |
 
 `account_id` est nullable pour les paiements qui ne dépendent d'aucun compte (espèces).
 
 `transmet_type` est nullable en base pour des raisons historiques, mais l'API l'exige toujours.
+
+`transmet_internal` marque le moyen de paiement **technique** d'un compte, créé à son premier transfert et réservé aux transferts : il est filtré par `get_transaction_method(s)`, donc
+introuvable par toutes les routes publiques.
 
 ### `transactions` — l'entité centrale
 
@@ -96,10 +100,13 @@ en a obligatoirement une. La règle est vérifiée par l'API (422), pas par la b
 | `transmet_id` | INTEGER | FK → `transaction_methods`, **NOT NULL** |
 | `category_id` | INTEGER | FK → `categories`, nullable, `ON DELETE SET NULL` |
 | `rectrans_id` | INTEGER | FK → `recurring_transactions`, nullable, `ON DELETE SET NULL` |
+| `transac_transfer_id` | UUID | nullable, indexé |
 | `user_id` | INTEGER | FK → `users`, NOT NULL |
 
 Le montant est en `NUMERIC(10,2)` (et non en flottant) pour éviter toute dérive d'arrondi
 sur des valeurs monétaires.
+
+Les deux moitiés d'un transfert entre comptes partagent le même `transac_transfer_id` ; il vaut `NULL` pour une transaction ordinaire. L'UUID est généré avant l'insertion, ce qui évite une clé étrangère croisée entre les deux lignes.
 
 ### `categories` — la catégorie d'une transaction (une seule)
 
@@ -144,9 +151,11 @@ aux catégories. Voir l'ADR « Catégories et tags » dans le vault Obsidian.
 | `rectrans_category_id` | INTEGER | FK → `categories`, nullable, `ON DELETE SET NULL` |
 | `user_id` | INTEGER | FK → `users`, NOT NULL |
 
-Une récurrence est un **modèle** : à la connexion, l'API génère les transactions échues depuis `rectrans_last_generated`, ce qui rend l'opération répétable sans doublon. La catégorie et les tags de la règle sont recopiés sur chaque transaction générée.
+Une récurrence est un **modèle** : l'API génère les transactions échues depuis `rectrans_last_generated`, ce qui rend l'opération répétable sans doublon. La génération a
+lieu à la connexion et à chaque création ou modification d'une règle. La catégorie et les tags de la règle sont recopiés sur chaque transaction générée.
 
-
+La prochaine échéance (`rectrans_next_date`) n'est **pas stockée** : c'est une propriété calculée du modèle, exposée en lecture par l'API, qui sert aussi de référence à la boucle
+de génération.
 
 ## Énumérations
 

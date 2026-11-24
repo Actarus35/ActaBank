@@ -1,7 +1,6 @@
 # ActaBank — Backend
 
-API de gestion de comptes personnels : banques, comptes, moyens de paiement, transactions,
-étiquettes et récurrences, le tout cloisonné par utilisateur.
+API de gestion de comptes personnels : banques, comptes, moyens de paiement, transactions, catégories, tags, récurrences et transferts entre comptes, le tout cloisonné par utilisateur.
 
 ## Stack
 
@@ -42,9 +41,16 @@ cp .env.example .env
 # génère un mot de passe base :  python -c "import secrets; print(secrets.token_urlsafe(24))"
 ```
 
-Variables attendues : `SECRET_KEY`, `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`,
-`POSTGRES_DB` (les `POSTGRES_*` servent à Docker Compose ; `DATABASE_URL` doit reprendre les
-mêmes identifiants).
+Variables attendues :
+- `SECRET_KEY`,
+- `DATABASE_URL`,
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+(les `POSTGRES_*` servent à Docker Compose ; `DATABASE_URL` doit reprendre les mêmes identifiants).
+
+Variables facultatives :
+- `ACCESS_TOKEN_EXPIRE_MINUTES` (durée de session, 30 par défaut),
+- `REGISTRATION_OPEN` (`true` par défaut ; `false` ferme les inscriptions avec une erreur 403),
+- `CORS_ORIGINS` (origines autorisées, `http://localhost:8081` par défaut, pour le développement).
 
 **2. Lancer la base de données** :
 
@@ -79,14 +85,28 @@ les données d'un autre.
 
 ## Statistiques
 
-Routes d'agrégation pour le tableau de bord, toutes filtrées par utilisateur et acceptant
-`?period=month|3months|6months|all` :
+Routes d'agrégation pour le tableau de bord, toutes filtrées par utilisateur. Les quatre premières acceptent `?period=month|3months|6months|all` :
 
-- `GET /stats/summary` — solde, revenus, dépenses
+- `GET /stats/summary` — solde, revenus, dépenses et nombre de transactions
 - `GET /stats/by-category` — dépenses par catégorie
       `?tag_id=…` restreint aux transactions portant ce tag
 - `GET /stats/balance-over-time` — évolution du solde
 - `GET /stats/by-name` — dépenses par libellé de transaction
+- `GET /stats/monthly?months=…` — revenus et dépenses mois par mois
+- `GET /stats/balances` — solde de chaque compte
+
+Les transferts entre comptes sont **exclus** des revenus et des dépenses, mais **comptés** dans les soldes.
+
+## Transferts entre comptes
+
+`POST /transfers` (`from_account_id`, `to_account_id`, `amount` > 0, `transfer_date`) crée **deux transactions liées** par un identifiant commun (`transac_transfer_id`), dans
+une seule transaction SQL : −montant sur le compte source, +montant sur le compte de destination.
+
+- Chaque compte reçoit, à son premier transfert, un moyen de paiement **interne** (`transmet_internal`), invisible de toutes les routes publiques.
+- Supprimer une moitié supprime le transfert entier.
+- Seuls le nom et la description d'un transfert sont modifiables (sinon 409).
+
+Choix et alternatives : voir l'ADR « Transferts entre comptes par transactions liées » dans `../Obsidian/Ressources/`.
 
 ## Tests
 
@@ -120,11 +140,13 @@ classDiagram
       +bank_id: int
       +bank_name: str
       +bank_color: Color
+      +bank_archived: bool
       +bank_description?: str
     }
     class Account {
       +account_id: int
       +account_name: str
+      +account_archived: bool
       +account_type: AccountType
       +account_initial_balance: Decimal
       +account_description?: str
@@ -132,6 +154,8 @@ classDiagram
     }
     class TransactionMethod {
       +transmet_id: int
+      +transmet_archived: bool
+      +transmet_internal: bool
       +transmet_type?: TransactionType
       +account_id?: int
     }
@@ -140,6 +164,7 @@ classDiagram
       +transac_name: str
       +transac_date: datetime
       +transac_amount: Decimal
+      +transac_transfer_id?: UUID
       +transac_description?: str
       +transmet_id: int
       +category_id?: int
@@ -160,6 +185,7 @@ classDiagram
       +rectrans_frequency: Frequency
       +rectrans_start_date: datetime
       +rectrans_end_date?: datetime
+      +rectrans_last_generated?: datetime
     }
 ```
 
