@@ -32,9 +32,18 @@ def create_transaction(db: Session, transaction: TransactionCreate, user_id: int
 
 def delete_transaction(db: Session, transaction_id: int, user_id: int):
     trans = get_transaction(db, transaction_id, user_id)
-    if trans:
+    if not trans:
+        return None
+    if trans.transac_transfer_id is not None:
+        halves = db.query(Transaction).filter(
+            Transaction.transac_transfer_id == trans.transac_transfer_id,
+            Transaction.user_id == user_id,
+        ).all()
+        for half in halves:
+            db.delete(half)
+    else:
         db.delete(trans)
-        db.commit()
+    db.commit()
     return trans
 
 

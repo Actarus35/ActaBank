@@ -13,6 +13,7 @@ from enums.stats_period import StatsPeriod
 from models.transactions import Transaction
 from models.transaction_methods import TransactionMethod
 
+NOT_TRANSFER = Transaction.transac_transfer_id.is_(None)
 
 def period_start(period: StatsPeriod, now: datetime) -> datetime | None:
     if period == StatsPeriod.MONTH:
@@ -34,7 +35,7 @@ def get_summary(db: Session, user_id: int, period: StatsPeriod, now: datetime | 
                  .filter(Transaction.user_id == user_id).scalar()
     solde = initial + total_tx
 
-    conds = [Transaction.user_id == user_id]
+    conds = [Transaction.user_id == user_id, NOT_TRANSFER]
     if start is not None:
         conds.append(Transaction.transac_date >= start)
 
@@ -63,7 +64,7 @@ def get_by_category(db: Session, user_id: int, period: StatsPeriod, tag_id: int 
     now = now or datetime.now()
     start = period_start(period, now)
 
-    conds = [Transaction.user_id == user_id, Transaction.transac_amount < 0]  # dépenses
+    conds = [Transaction.user_id == user_id, Transaction.transac_amount < 0, NOT_TRANSFER]
     if start is not None:
         conds.append(Transaction.transac_date >= start)
     if tag_id is not None:
@@ -125,7 +126,7 @@ def get_by_name(db: Session, user_id: int, period: StatsPeriod, now: datetime | 
     now = now or datetime.now()
     start = period_start(period, now)
 
-    conds = [Transaction.user_id == user_id, Transaction.transac_amount < 0]
+    conds = [Transaction.user_id == user_id, Transaction.transac_amount < 0, NOT_TRANSFER]
     if start is not None:
         conds.append(Transaction.transac_date >= start)
 
@@ -155,7 +156,7 @@ def get_monthly(db: Session, user_id: int, months: int, now: datetime | None = N
         }
 
     rows = db.query(Transaction.transac_date, Transaction.transac_amount) \
-             .filter(Transaction.user_id == user_id, Transaction.transac_date >= first).all()
+             .filter(Transaction.user_id == user_id, Transaction.transac_date >= first, NOT_TRANSFER).all()
     for tdate, amount in rows:
         bucket = buckets.get((tdate.year, tdate.month))
         if bucket is None:

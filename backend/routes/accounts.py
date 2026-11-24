@@ -54,10 +54,10 @@ def delete_account(account_id: int, db: Session = Depends(get_db), current_user:
             status_code=404,
             detail="Account not found",
         )
-    if account.methods:
+    if any(not m.transmet_internal or m.transactions for m in account.methods):
         raise HTTPException(
             status_code=409,
-            detail="Ce compte est utilisé par des méthodes de paiement et ne peut pas être supprimé",
+            detail="Ce compte a encore des moyens de paiement ou des transferts : archive-le plutôt",
         )
     crud.delete_account(db, account_id, current_user.user_id)
 

@@ -19,6 +19,7 @@ class Transaction {
     final String? accountName;
     final String? bankName;
     final bool recurring;
+    final String? transferId;
     final List<Tag> tags;
 
     Transaction({
@@ -36,6 +37,7 @@ class Transaction {
         this.accountName,
         this.bankName,
         required this.recurring,
+        this.transferId,
         required this.tags,
     });
 
@@ -59,9 +61,12 @@ class Transaction {
             accountName: account?['account_name'] as String?,
             bankName: bank?['bank_name'] as String?,
             recurring: json['rectrans_id'] != null,
+            transferId: json['transac_transfer_id'] as String?,
             tags: (json['tags'] as List).map((e) => Tag.fromJson(e)).toList(),
         );
     }
+
+    bool get isTransfer => transferId != null;
 
     String get subtitle => methodLabel(methodType, accountName: accountName, bankName: bankName);
 }
@@ -104,6 +109,30 @@ class TransactionsRepository {
         await _dio.patch('/transactions/$id', data:data);
       }
     }
+
+    Future<void> createTransfer({
+      required int fromAccountId,
+      required int toAccountId,
+      required double amount,
+      required DateTime date,
+      required String name,
+      String? description,
+    }) async {
+      await _dio.post('/transfers/', data: {
+        'from_account_id': fromAccountId,
+        'to_account_id': toAccountId,
+        'amount': amount.toStringAsFixed(2),
+        'transfer_date': date.toIso8601String(),
+        'name': name,
+        'description': description,
+      });
+    }
+
+    Future<void> rename(int id, {required String name, String? description}) =>
+      _dio.patch('/transactions/$id', data: {
+        'transac_name': name,
+        'transac_description': description,
+      });
 
     Future<void> delete(int id) => _dio.delete('/transactions/$id');
 }

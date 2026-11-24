@@ -12,6 +12,7 @@ from crud import transaction_methods as methods_crud
 
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
+TRANSFER_EDITABLE = {"transac_name", "transac_description"}
 
 
 def check_transaction_refs(db, user_id, transmet_id, category_id, rectrans_id, tag_ids, current_transmet_id=None):
@@ -60,5 +61,7 @@ def update_transaction(transaction_id: int, transaction_update: schema.Transacti
     existing = crud.get_transaction(db, transaction_id, current_user.user_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Transaction not found")
+    if existing.transac_transfer_id is not None and transaction_update.model_fields_set - TRANSFER_EDITABLE:
+        raise HTTPException(status_code=409, detail="Un transfert ne se modifie pas : supprime-le puis recrée-le")
     check_transaction_refs(db, current_user.user_id, transaction_update.transmet_id, transaction_update.category_id, transaction_update.rectrans_id, transaction_update.tag_ids, current_transmet_id=existing.transmet_id)
     return crud.modify_transaction(db, transaction_id, current_user.user_id, transaction_update)

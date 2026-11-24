@@ -9,6 +9,7 @@ from routes.tags import router as tags_router
 from routes.stats import router as stats_router
 from routes.banks import router as banks_router
 from routes.accounts import router as accounts_router
+from routes.transfers import router as transfers_router
 from routes.categories import router as categories_router
 from routes.transactions import router as transactions_router
 from routes.transaction_methods import router as methods_router
@@ -30,6 +31,7 @@ app.include_router(stats_router)
 app.include_router(banks_router)
 app.include_router(methods_router)
 app.include_router(accounts_router)
+app.include_router(transfers_router)
 app.include_router(categories_router)
 app.include_router(transactions_router)
 app.include_router(recurring_transactions_router)

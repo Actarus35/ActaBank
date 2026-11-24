@@ -29,10 +29,11 @@ class _HeaderRow extends _Row {
 
 class _TransactionRow extends _Row {
   final Transaction transaction;
-  _TransactionRow(this.transaction);
+  final Transaction? peer;
+  _TransactionRow(this.transaction, this.peer);
 }
 
-List<_Row> _groupByDay(List<Transaction> list) {
+List<_Row> _groupByDay(List<Transaction> list, Map<String, Transaction> incoming) {
   final rows = <_Row>[];
   _HeaderRow? header;
   for (final t in list) {
@@ -41,8 +42,8 @@ List<_Row> _groupByDay(List<Transaction> list) {
       header = _HeaderRow(day);
       rows.add(header);
     }
-    header.total += t.amount;
-    rows.add(_TransactionRow(t));
+    if (!t.isTransfer) header.total += t.amount;
+    rows.add(_TransactionRow(t, incoming[t.transferId]));
   }
   return rows;
 }
@@ -95,17 +96,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   static bool _matches(int filter, int? value) =>
     filter == _all || (filter == _none ? value == null : value == filter);
 
-  bool _keep(Transaction t) {
+  bool _keep(Transaction t, Transaction? peer) {
     final typeOk = switch (_filter) {
       _Filter.all => true,
-      _Filter.expenses => t.amount < 0,
-      _Filter.income => t.amount > 0,
+      _Filter.expenses => t.amount < 0 && !t.isTransfer,
+      _Filter.income => t.amount > 0 && !t.isTransfer,
     };
+    final accountOk = _matches(_account, t.accountId)
+      || (peer != null && _matches(_account, peer.accountId));
     final query = _search.text.trim().toLowerCase();
     return typeOk
       && (query.isEmpty || t.name.toLowerCase().contains(query))
+      && (_category == _all || !t.isTransfer)   // un transfert n'a pas de catégorie, même pas « aucune »
       && _matches(_category, t.categoryId)
-      && _matches(_account, t.accountId)
+      && accountOk
       && (_tag == _all || t.tags.any((g) => g.id == _tag));
   }
 
@@ -254,8 +258,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Erreur : $e')),
             data: (all) {
-              final rows = _groupByDay(all.where(_keep).toList());
-              if (rows.isEmpty) {
+              final incoming = {
+                for (final t in all)
+                  if (t.isTransfer && t.amount > 0) t.transferId!: t,
+              };
+              final visible = all
+                .where((t) => !(t.isTransfer && t.amount > 0))   // une seule ligne par transfert
+                .where((t) => _keep(t, incoming[t.transferId]))
+                .toList();
+              final rows = _groupByDay(visible, incoming);              if (rows.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -278,11 +289,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   itemCount: rows.length,
                   itemBuilder: (context, i) => switch (rows[i]) {
                     _HeaderRow(:final day, :final total) => _DayHeader(day: day, total: total),
-                    _TransactionRow(:final transaction) => _TransactionTile(
-                      transaction: transaction,
-                      selected: _editing?.id == transaction.id,
-                      onTap: () => _openPanel(transaction),
-                    ),
+                    _TransactionRow(:final transaction, :final peer) => transaction.isTransfer
+                      ? _TransferTile(
+                          outgoing: transaction,
+                          incoming: peer,
+                          selected: _editing?.id == transaction.id,
+                          onTap: () => _openPanel(transaction),
+                        )
+                      : _TransactionTile(
+                          transaction: transaction,
+                          selected: _editing?.id == transaction.id,
+                          onTap: () => _openPanel(transaction),
+                        ),
                   },
                 ),
               );
@@ -439,6 +457,7 @@ class _TransactionTile extends StatelessWidget {
     final palette = context.palette;
     final brightness = Theme.of(context).brightness;
     final wide = isWide(context);
+    final colorName = t.categoryColor;
     final tone = labelTone(t.categoryColor, brightness);
     final category = t.categoryName ?? 'Sans catégorie';
 
@@ -521,7 +540,7 @@ class _TransactionTile extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             if (wide) ...[
-              ToneChip(label: category, colorName: t.categoryColor),
+              ToneChip(label: category, colorName: colorName),
               const SizedBox(width: 14),
               SizedBox(width: 104, child: Align(alignment: Alignment.centerRight, child: amount)),
             ] else
@@ -534,6 +553,90 @@ class _TransactionTile extends StatelessWidget {
                     style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: tone.text),
                   ),
                 ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TransferTile extends StatelessWidget {
+  final Transaction outgoing;
+  final Transaction? incoming;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TransferTile({required this.outgoing, this.incoming, required this.selected, required this.onTap});
+
+  static String _account(Transaction? t) {
+    if (t == null || t.accountName == null) return '?';
+    return t.bankName == null ? t.accountName! : '${t.accountName} (${t.bankName})';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final wide = isWide(context);
+
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+      decoration: BoxDecoration(color: transferTone.background, borderRadius: BorderRadius.circular(999)),
+      child: Text(
+        '⇄ Transfert',
+        style: TextStyle(fontSize: wide ? 12 : 10.5, fontWeight: FontWeight.w700, color: transferTone.text),
+      ),
+    );
+    final amount = Text(
+      formatAmount(outgoing.amount.abs()),
+      style: TextStyle(fontSize: wide ? 15 : 14, fontWeight: FontWeight.w600, color: transferTone.background),
+    );
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: wide ? 18 : 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : null,
+          border: Border(top: BorderSide(color: palette.border)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: transferTone.background, borderRadius: BorderRadius.circular(11)),
+              child: Text('⇄', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: transferTone.text)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    outgoing.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: wide ? 14 : 13.5, fontWeight: FontWeight.w600, color: palette.ink),
+                  ),
+                  Text(
+                    '${_account(outgoing)} → ${_account(incoming)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: wide ? 12 : 11, color: palette.muted),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (wide) ...[
+              chip,
+              const SizedBox(width: 14),
+              SizedBox(width: 104, child: Align(alignment: Alignment.centerRight, child: amount)),
+            ] else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [amount, const SizedBox(height: 3), chip],
               ),
           ],
         ),
