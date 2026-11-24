@@ -12,8 +12,6 @@ backend/database.db
 
 # Obsidian (cache d'espace de travail, propre à ta machine)
 Obsidian/.obsidian/workspace.json
-Obsidian/Ressources/*.png
-Obsidian/Ressources/Ajouts.md
 
 # Conception graphique
 design/
